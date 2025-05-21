@@ -1,3 +1,5 @@
+// Updated songRoutes.js with improved validation
+
 import express from "express";
 import {
   getAllSongs,
@@ -5,13 +7,9 @@ import {
   createSong,
   updateSong,
   deleteSong,
-
-
-
 } from "../controllers/songController.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
-import isAdmin from "../middlewares/authMiddleware.js";
-import { body, query } from "express-validator";
+import { body, param } from "express-validator";
 
 const router = express.Router();
 
@@ -41,46 +39,56 @@ const songValidation = [
     .withMessage("Default key must be less than 5 characters"),
 
   body("categoryId")
-    .optional()
-    .isUUID()
-    .withMessage("Category ID must be a valid UUID"),
+    .optional({ nullable: true })
+    .isString()
+    .withMessage("Category ID must be a string"),
 ];
 
-// Search validation
-const searchValidation = [
-  query("q").optional().isString().withMessage("Search query must be a string"),
-  query("page")
+// Less strict validation for updates
+const updateValidation = [
+  body("title")
     .optional()
-    .isInt({ min: 1 })
-    .withMessage("Page must be a positive integer"),
-  query("limit")
-    .optional()
-    .isInt({ min: 1, max: 50 })
-    .withMessage("Limit must be between 1 and 50"),
-];
+    .trim()
+    .notEmpty()
+    .withMessage("Title cannot be empty if provided")
+    .isLength({ max: 200 })
+    .withMessage("Title must be less than 200 characters"),
 
-// Pagination validation
-const paginationValidation = [
-  query("page")
+  body("artist")
     .optional()
-    .isInt({ min: 1 })
-    .withMessage("Page must be a positive integer"),
-  query("limit")
+    .trim()
+    .notEmpty()
+    .withMessage("Artist cannot be empty if provided")
+    .isLength({ max: 200 })
+    .withMessage("Artist must be less than 200 characters"),
+
+  body("lyrics")
     .optional()
-    .isInt({ min: 1, max: 50 })
-    .withMessage("Limit must be between 1 and 50"),
+    .trim()
+    .notEmpty()
+    .withMessage("Lyrics cannot be empty if provided"),
+
+  body("defaultKey")
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage("Default key cannot be empty if provided")
+    .isLength({ max: 5 })
+    .withMessage("Default key must be less than 5 characters"),
+
+  body("categoryId")
+    .optional({ nullable: true })
+    .isString()
+    .withMessage("Category ID must be a string"),
 ];
 
 // Public routes
-router.get("/", paginationValidation, getAllSongs);
-
-
-
+router.get("/", getAllSongs);
 router.get("/:id", getSongById);
 
-// Protected routes - Admin only
-router.post("/", authMiddleware, isAdmin, songValidation, createSong);
-router.put("/:id", authMiddleware, isAdmin, songValidation, updateSong);
-router.delete("/:id", authMiddleware, isAdmin, deleteSong);
+// Protected routes
+router.post("/", authMiddleware, songValidation, createSong);
+router.put("/:id", authMiddleware, updateValidation, updateSong);
+router.delete("/:id", authMiddleware, deleteSong);
 
 export default router;

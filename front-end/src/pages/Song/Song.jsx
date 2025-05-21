@@ -1,28 +1,46 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import {
-  Card, Row, Col, Typography, Button, Input, Table, Pagination, 
-  Space, Select, Modal, Form, message, Tag, Tabs, Dropdown, Menu
+  Card,
+  Row,
+  Col,
+  Typography,
+  Button,
+  Table,
+  Pagination,
+  Input,
+  Space,
+  Modal,
+  Form,
+  message,
+  Tag,
+  Select,
 } from "antd";
 import {
-  PlusOutlined, SearchOutlined, EditOutlined, DeleteOutlined, 
-  EyeOutlined, DownOutlined, FileTextOutlined, SwapOutlined
+  PlusOutlined,
+  SearchOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  EyeOutlined,
+  SwapOutlined,
 } from "@ant-design/icons";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import Header from "../../components/Header/Header";
-import { 
-  getAllSongs, getSongById, createSong, updateSong, 
-  deleteSong, searchSongs, getAllCategories 
+import ChordSheetJS from 'chordsheetjs';
+import {
+  getAllSongs,
+  getSongById,
+  createSong,
+  updateSong,
+  deleteSong,
+  getAllCategories,
 } from "../../services/songService";
 import "./Song.css";
 import PropTypes from "prop-types";
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 const { Option } = Select;
-const { TabPane } = Tabs;
-const { TextArea } = Input;
 
 const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
-  // State
   const [songs, setSongs] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -34,28 +52,25 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,
-    total: 0
+    total: 0,
   });
   const [form] = Form.useForm();
-  const token = localStorage.getItem("token");
 
-  // Effect to load songs and categories on component mount
   useEffect(() => {
     fetchSongs();
     fetchCategories();
   }, []);
 
-  // Fetch songs function
   const fetchSongs = async (page = 1, limit = 10) => {
     setLoading(true);
     try {
-      const response = await getAllSongs(page, limit, token);
+      const response = await getAllSongs(page, limit);
       if (response.success) {
         setSongs(response.data);
         setPagination({
           current: response.pagination.page,
           pageSize: response.pagination.limit,
-          total: response.pagination.totalSongs
+          total: response.pagination.totalSongs,
         });
       } else {
         message.error("Failed to fetch songs");
@@ -68,208 +83,205 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
     }
   };
 
-  // Fetch categories function
   const fetchCategories = async () => {
     try {
-      const response = await getAllCategories(token);
+      const response = await getAllCategories();
       if (response.success) {
         setCategories(response.data);
-      } else {
-        message.error("Failed to fetch categories");
       }
     } catch (error) {
       console.error("Error fetching categories:", error);
-      message.error("An error occurred while fetching categories");
     }
   };
 
-  // Handle search
-  const handleSearch = async () => {
-    if (!searchText) {
-      return fetchSongs();
-    }
-    
-    setLoading(true);
+  const renderLyricsWithChords = (lyrics) => {
     try {
-      const response = await searchSongs(searchText, 1, 10, token);
-      if (response.success) {
-        setSongs(response.data);
-        setPagination({
-          current: response.pagination.page,
-          pageSize: response.pagination.limit,
-          total: response.pagination.totalSongs
-        });
-      } else {
-        message.error("Search failed");
-      }
+      // Process each line to separate chords and lyrics
+      return (
+        <div className="lyrics-display">
+          {lyrics.split('\n').map((line, i) => {
+            if (!line.trim()) {
+              return <div key={i} className="empty-line">&nbsp;</div>;
+            }
+
+            const parts = line.split(/(\[.*?\])/g).filter(Boolean);
+            const chordLine = parts
+              .map(part => part.match(/\[(.*?)\]/)?.[1] || '')
+              .filter(Boolean);
+            const textLine = parts
+              .map(part => part.replace(/\[.*?\]/g, ''))
+              .join('');
+
+            return (
+              <div key={i} className="lyrics-line">
+                {chordLine.length > 0 && (
+                  <div className="chord-line">
+                    {chordLine.map((chord, j) => (
+                      <span key={j} className="chord">
+                        {chord}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className="text-line">{textLine}</div>
+              </div>
+            );
+          })}
+        </div>
+      );
     } catch (error) {
-      console.error("Error searching songs:", error);
-      message.error("An error occurred while searching");
-    } finally {
-      setLoading(false);
+      console.error('Error rendering lyrics:', error);
+      return <pre className="lyrics-display">{lyrics}</pre>;
     }
   };
 
-  // Show song modal (create/edit)
+  const transposeChords = (lyrics, fromKey, toKey) => {
+    try {
+      const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+      const fromIndex = notes.indexOf(fromKey);
+      const toIndex = notes.indexOf(toKey);
+      let semitones = toIndex - fromIndex;
+      if (semitones < 0) semitones += 12;
+
+      return lyrics.replace(/\[(.*?)\]/g, (match, chord) => {
+        const [, root, ...rest] = chord.match(/([A-G]#?)(.*)/) || [match, chord, ''];
+        const currentIndex = notes.indexOf(root);
+        if (currentIndex === -1) return match;
+
+        let newIndex = (currentIndex + semitones) % 12;
+        if (newIndex < 0) newIndex += 12;
+
+        return `[${notes[newIndex]}${rest.join('')}]`;
+      });
+    } catch (error) {
+      console.error('Error transposing:', error);
+      return lyrics;
+    }
+  };
+
+  const handleSearch = () => {
+    fetchSongs();
+  };
+
   const showSongModal = (song = null) => {
     setSelectedSong(song);
-    
     if (song) {
-      form.setFieldsValue({
-        title: song.title,
-        artist: song.artist,
-        lyrics: song.lyrics,
-        defaultKey: song.defaultKey,
-        categoryId: song.categoryId
-      });
+      form.setFieldsValue(song);
     } else {
       form.resetFields();
     }
-    
     setIsModalVisible(true);
   };
 
-  // Handle song form submission
   const handleSongSubmit = async (values) => {
     try {
-      let response;
-      
-      if (selectedSong) {
-        // Update song
-        response = await updateSong(selectedSong.id, values, token);
-        if (response.success) {
-          message.success("Song updated successfully");
-          fetchSongs(pagination.current, pagination.pageSize);
-        } else {
-          message.error("Failed to update song");
-        }
-      } else {
-        // Create song
-        response = await createSong(values, token);
-        if (response.success) {
-          message.success("Song created successfully");
-          fetchSongs(pagination.current, pagination.pageSize);
-        } else {
-          message.error("Failed to create song");
-        }
-      }
-      
-      setIsModalVisible(false);
-      setSelectedSong(null);
-    } catch (error) {
-      console.error("Error saving song:", error);
-      message.error("An error occurred while saving the song");
-    }
-  };
+      const songData = {
+        title: values.title.trim(),
+        artist: values.artist.trim(),
+        lyrics: values.lyrics.trim(),
+        defaultKey: values.defaultKey,
+        categoryId: values.categoryId,
+      };
 
-  // Delete song confirmation
-  const showDeleteConfirm = (song) => {
-    setSelectedSong(song);
-    setIsDeleteModalVisible(true);
-  };
+      const response = selectedSong
+        ? await updateSong(selectedSong.id, songData)
+        : await createSong(songData);
 
-  // Handle song deletion
-  const handleDeleteSong = async () => {
-    if (!selectedSong) return;
-    
-    try {
-      const response = await deleteSong(selectedSong.id, token);
       if (response.success) {
-        message.success("Song deleted successfully");
+        message.success(`Song ${selectedSong ? 'updated' : 'created'} successfully`);
         fetchSongs(pagination.current, pagination.pageSize);
+        setIsModalVisible(false);
+        form.resetFields();
       } else {
-        message.error("Failed to delete song");
+        message.error(response.message);
       }
-      
-      setIsDeleteModalVisible(false);
-      setSelectedSong(null);
     } catch (error) {
-      console.error("Error deleting song:", error);
-      message.error("An error occurred while deleting the song");
+      console.error('Error saving song:', error);
+      message.error('An error occurred while saving the song');
     }
   };
 
-  // View song details
+  const handleDeleteSong = async () => {
+    try {
+      const response = await deleteSong(selectedSong.id);
+      if (response.success) {
+        message.success('Song deleted successfully');
+        fetchSongs(pagination.current, pagination.pageSize);
+        setIsDeleteModalVisible(false);
+      } else {
+        message.error(response.message);
+      }
+    } catch (error) {
+      console.error('Error deleting song:', error);
+      message.error('An error occurred while deleting the song');
+    }
+  };
+
   const viewSongDetails = async (song) => {
     try {
-      const response = await getSongById(song.id, token);
+      const response = await getSongById(song.id);
       if (response.success) {
         setSelectedSong(response.data);
         setIsSongDetailVisible(true);
-      } else {
-        message.error("Failed to load song details");
       }
     } catch (error) {
-      console.error("Error fetching song details:", error);
-      message.error("An error occurred while loading song details");
+      console.error('Error fetching song details:', error);
+      message.error('Failed to load song details');
     }
   };
 
-  // Handle pagination change
-  const handlePageChange = (page, pageSize) => {
-    fetchSongs(page, pageSize);
-  };
-
-  // Song table columns
   const columns = [
     {
-      title: 'Title',
-      dataIndex: 'title',
-      key: 'title',
+      title: "Title",
+      dataIndex: "title",
+      key: "title",
       render: (text) => <strong>{text}</strong>,
     },
     {
-      title: 'Artist',
-      dataIndex: 'artist',
-      key: 'artist',
+      title: "Artist",
+      dataIndex: "artist",
+      key: "artist",
     },
     {
-      title: 'Key',
-      dataIndex: 'defaultKey',
-      key: 'defaultKey',
+      title: "Key",
+      dataIndex: "defaultKey",
+      key: "defaultKey",
       render: (key) => <Tag color="blue">{key}</Tag>,
     },
     {
-      title: 'Category',
-      dataIndex: 'category',
-      key: 'category',
-      render: (category) => category ? category.name : '-',
+      title: "Category",
+      dataIndex: "category",
+      key: "category",
+      render: (category) => (category ? category.name : "-"),
     },
     {
-      title: 'Actions',
-      key: 'actions',
+      title: "Actions",
+      key: "actions",
       render: (_, record) => (
         <Space size="small">
-          <Button 
-            type="text" 
-            icon={<EyeOutlined />} 
+          <Button
+            type="text"
+            icon={<EyeOutlined />}
             onClick={() => viewSongDetails(record)}
           />
-          <Button 
-            type="text" 
-            icon={<EditOutlined />} 
+          <Button
+            type="text"
+            icon={<EditOutlined />}
             onClick={() => showSongModal(record)}
           />
-          <Button 
-            type="text" 
-            danger 
-            icon={<DeleteOutlined />} 
-            onClick={() => showDeleteConfirm(record)}
+          <Button
+            type="text"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => {
+              setSelectedSong(record);
+              setIsDeleteModalVisible(true);
+            }}
           />
         </Space>
       ),
     },
   ];
-
-  // Render chords in lyrics for display
-  const renderLyricsWithChords = (lyrics) => {
-    // Basic rendering - you can enhance this later
-    return lyrics.split('\n').map((line, i) => (
-      <div key={i} className="lyrics-line">
-        {line}
-      </div>
-    ));
-  };
 
   return (
     <div className={`admin-layout ${sidebarVisible ? "" : "sidebar-closed"}`}>
@@ -290,17 +302,14 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
                     value={searchText}
                     onChange={(e) => setSearchText(e.target.value)}
                     onPressEnter={handleSearch}
-                    style={{ width: 250, marginRight: 16 }}
+                    style={{ width: 250 }}
                   />
                   <Select
                     placeholder="หมวดหมู่เพลง"
-                    style={{ width: 200, marginRight: 16 }}
+                    style={{ width: 200 }}
                     allowClear
-                    onChange={(value) => {
-                      // Filter by category - can implement later
-                    }}
                   >
-                    {categories.map(category => (
+                    {categories.map((category) => (
                       <Option key={category.id} value={category.id}>
                         {category.name}
                       </Option>
@@ -327,9 +336,9 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
               <div className="pagination-container">
                 <Pagination
                   current={pagination.current}
-                  pageSize={pagination.pageSize}
                   total={pagination.total}
-                  onChange={handlePageChange}
+                  pageSize={pagination.pageSize}
+                  onChange={(page, pageSize) => fetchSongs(page, pageSize)}
                   showSizeChanger={false}
                 />
               </div>
@@ -341,17 +350,17 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
       {/* Song Form Modal */}
       <Modal
         title={selectedSong ? "แก้ไขเพลง" : "เพิ่มเพลงใหม่"}
-        visible={isModalVisible}
+        open={isModalVisible}
         onCancel={() => {
           setIsModalVisible(false);
-          setSelectedSong(null);
+          form.resetFields();
         }}
         footer={null}
         width={800}
       >
-        <Form 
-          form={form} 
-          layout="vertical" 
+        <Form
+          form={form}
+          layout="vertical"
           onFinish={handleSongSubmit}
         >
           <Row gutter={16}>
@@ -361,7 +370,7 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
                 label="ชื่อเพลง"
                 rules={[{ required: true, message: "กรุณากรอกชื่อเพลง" }]}
               >
-                <Input placeholder="ชื่อเพลง" />
+                <Input />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -370,7 +379,7 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
                 label="ศิลปิน"
                 rules={[{ required: true, message: "กรุณากรอกชื่อศิลปิน" }]}
               >
-                <Input placeholder="ศิลปิน" />
+                <Input />
               </Form.Item>
             </Col>
           </Row>
@@ -379,10 +388,10 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
             <Col span={12}>
               <Form.Item
                 name="defaultKey"
-                label="คีย์เริ่มต้น"
-                rules={[{ required: true, message: "กรุณากรอกคีย์เริ่มต้น" }]}
+                label="คีย์"
+                rules={[{ required: true, message: "กรุณาเลือกคีย์" }]}
               >
-                <Select placeholder="เลือกคีย์เริ่มต้น">
+                <Select>
                   {['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].map(key => (
                     <Option key={key} value={key}>{key}</Option>
                   ))}
@@ -394,7 +403,7 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
                 name="categoryId"
                 label="หมวดหมู่"
               >
-                <Select placeholder="เลือกหมวดหมู่" allowClear>
+                <Select allowClear>
                   {categories.map(category => (
                     <Option key={category.id} value={category.id}>
                       {category.name}
@@ -409,26 +418,21 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
             name="lyrics"
             label="เนื้อเพลงพร้อมคอร์ด"
             rules={[{ required: true, message: "กรุณากรอกเนื้อเพลง" }]}
-            extra="วางคอร์ดไว้ในวงเล็บเหลี่ยม เช่น [C], [Em], [F], [G7]"
+            extra="วางคอร์ดในวงเล็บเหลี่ยม เช่น [C]เนื้อเพลง [Am]เนื้อเพลง"
           >
-            <TextArea 
-              rows={15} 
-              placeholder="เนื้อเพลงพร้อมคอร์ด เช่น [C]เธอจะจาก[G]ฉันไปแล้ว" 
-            />
+            <Input.TextArea rows={15} />
           </Form.Item>
 
           <Form.Item>
             <Space>
-              <Button 
-                onClick={() => {
-                  setIsModalVisible(false);
-                  setSelectedSong(null);
-                }}
-              >
+              <Button onClick={() => {
+                setIsModalVisible(false);
+                form.resetFields();
+              }}>
                 ยกเลิก
               </Button>
               <Button type="primary" htmlType="submit">
-                {selectedSong ? "บันทึกการเปลี่ยนแปลง" : "เพิ่มเพลง"}
+                {selectedSong ? "บันทึกการแก้ไข" : "เพิ่มเพลง"}
               </Button>
             </Space>
           </Form.Item>
@@ -438,35 +442,28 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
       {/* Delete Confirmation Modal */}
       <Modal
         title="ยืนยันการลบเพลง"
-        visible={isDeleteModalVisible}
-        onCancel={() => {
-          setIsDeleteModalVisible(false);
-          setSelectedSong(null);
-        }}
+        open={isDeleteModalVisible}
         onOk={handleDeleteSong}
+        onCancel={() => setIsDeleteModalVisible(false)}
         okText="ลบ"
         cancelText="ยกเลิก"
         okButtonProps={{ danger: true }}
       >
-        <p>คุณแน่ใจหรือว่าต้องการลบเพลง "{selectedSong?.title}" ของ {selectedSong?.artist}?</p>
-        <p>การกระทำนี้ไม่สามารถเรียกคืนได้</p>
+        <p>คุณแน่ใจหรือไม่ที่จะลบเพลง "{selectedSong?.title}"?</p>
       </Modal>
 
       {/* Song Detail Modal */}
       <Modal
         title={selectedSong?.title}
-        visible={isSongDetailVisible}
-        onCancel={() => {
-          setIsSongDetailVisible(false);
-          setSelectedSong(null);
-        }}
+        open={isSongDetailVisible}
+        onCancel={() => setIsSongDetailVisible(false)}
         footer={[
           <Button key="close" onClick={() => setIsSongDetailVisible(false)}>
             ปิด
           </Button>,
-          <Button 
-            key="edit" 
-            type="primary" 
+          <Button
+            key="edit"
+            type="primary"
             onClick={() => {
               setIsSongDetailVisible(false);
               showSongModal(selectedSong);
@@ -487,18 +484,34 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
                 <p>หมวดหมู่: <Tag color="green">{selectedSong.category.name}</Tag></p>
               )}
             </div>
-            
-            <Card title="เนื้อเพลงพร้อมคอร์ด" className="lyrics-card">
-              <div className="lyrics-content">
-                {renderLyricsWithChords(selectedSong.lyrics)}
-              </div>
-              
-              <div className="chord-controls" style={{ marginTop: 16 }}>
+
+            <Card
+              title="เนื้อเพลงพร้อมคอร์ด"
+              className="lyrics-card"
+            >
+              {renderLyricsWithChords(selectedSong.lyrics)}
+
+              <div className="chord-controls">
                 <Space>
                   <Button type="primary" icon={<SwapOutlined />}>
                     เปลี่ยนคีย์
                   </Button>
-                  <Select defaultValue={selectedSong.defaultKey} style={{ width: 80 }}>
+                  <Select
+                    defaultValue={selectedSong.defaultKey}
+                    style={{ width: 80 }}
+                    onChange={(value) => {
+                      const transposedLyrics = transposeChords(
+                        selectedSong.lyrics,
+                        selectedSong.defaultKey,
+                        value
+                      );
+                      setSelectedSong({
+                        ...selectedSong,
+                        lyrics: transposedLyrics,
+                        defaultKey: value
+                      });
+                    }}
+                  >
                     {['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].map(key => (
                       <Option key={key} value={key}>{key}</Option>
                     ))}

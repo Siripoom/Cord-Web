@@ -73,11 +73,26 @@ export const createSong = async (songData, token) => {
  */
 export const updateSong = async (id, songData, token) => {
   try {
-    const response = await api.put(`/songs/${id}`, songData, authHeader(token));
+    // Clean up undefined values from songData
+    const cleanData = Object.fromEntries(
+      Object.entries(songData).filter(([_, v]) => v !== undefined)
+    );
+
+    const response = await api.put(`/songs/${id}`, cleanData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
     return response.data;
   } catch (error) {
     console.error(`Error updating song with ID ${id}:`, error);
-    throw error;
+    // Return error information in a structured way
+    return {
+      success: false,
+      message: error.response?.data?.message || "Failed to update song",
+      error: error.response?.data || error.message,
+    };
   }
 };
 

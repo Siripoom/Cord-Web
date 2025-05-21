@@ -60,12 +60,12 @@ export const getSongById = async (req, res) => {
       where: { id: req.params.id }, // Use UUID directly, no parsing needed
       include: {
         category: true,
-        createdBy: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
+        // createdBy: {
+        //   select: {
+        //     id: true,
+        //     name: true,
+        //   },
+        // },
       },
     });
 
@@ -141,37 +141,49 @@ export const createSong = async (req, res) => {
  */
 export const updateSong = async (req, res) => {
   try {
+    // Validate request
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
         message: "Validation error",
-        errors: errors.array(),
+        errors: errors.array().map((err) => ({
+          field: err.path,
+          message: err.msg,
+        })),
       });
     }
 
+    const songId = req.params.id;
+    const updateData = {};
+
+    // Only include fields that were actually provided
     const { title, artist, lyrics, defaultKey, categoryId } = req.body;
 
+    if (title !== undefined) updateData.title = title;
+    if (artist !== undefined) updateData.artist = artist;
+    if (lyrics !== undefined) updateData.lyrics = lyrics;
+    if (defaultKey !== undefined) updateData.defaultKey = defaultKey;
+    if (categoryId !== undefined) updateData.categoryId = categoryId;
+
     // Check if song exists
-    const songExists = await prisma.song.findUnique({
-      where: { id: req.params.id }, // Use UUID directly
+    const existingSong = await prisma.song.findUnique({
+      where: { id: songId },
     });
 
-    if (!songExists) {
+    if (!existingSong) {
       return res.status(404).json({
         success: false,
         message: "Song not found",
       });
     }
 
+    // Update song
     const updatedSong = await prisma.song.update({
-      where: { id: req.params.id }, // Use UUID directly
-      data: {
-        title,
-        artist,
-        lyrics,
-        defaultKey,
-        categoryId, // Use UUID directly
+      where: { id: songId },
+      data: updateData,
+      include: {
+        category: true,
       },
     });
 
@@ -182,14 +194,32 @@ export const updateSong = async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating song:", error);
+
+    // Handle Prisma specific errors
+    if (error.code === "P2025") {
+      return res.status(404).json({
+        success: false,
+        message: "Song not found",
+      });
+    }
+
+    if (error.code === "P2003") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid category ID provided",
+      });
+    }
+
     res.status(500).json({
       success: false,
       message: "Error updating song",
-      error: error.message,
+      error:
+        process.env.NODE_ENV === "production"
+          ? "Internal server error"
+          : error.message,
     });
   }
 };
-
 /**
  * @desc    Delete a song
  * @route   DELETE /api/songs/:id

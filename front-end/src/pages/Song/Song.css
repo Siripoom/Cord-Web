@@ -1,3 +1,4 @@
+/* Container and layout */
 .dashboard-container {
   padding: 20px;
   background-color: #f9f9f9;
@@ -10,243 +11,7 @@
   margin: 0 auto;
 }
 
-.dashboard-section {
-  margin-bottom: 24px;
-  background-color: white;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-  border: 1px solid rgba(0, 0, 0, 0.03);
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-}
-
-.section-title {
-  margin: 0 !important;
-  font-weight: 600 !important;
-  font-size: 18px !important;
-  color: #1a2b4e;
-}
-
-.date-filter-btn {
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-}
-
-/* Statistic Cards */
-.stat-card {
-  height: 180px;
-  border-radius: 16px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  border: none;
-  position: relative;
-  overflow: hidden;
-  padding: 24px;
-  box-shadow: none;
-}
-
-.stat-icon {
-  font-size: 24px;
-  margin-bottom: 16px;
-  width: 48px;
-  height: 48px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-radius: 50%;
-}
-
-.stat-value {
-  font-size: 28px;
-  font-weight: bold;
-  margin-bottom: 10px;
-}
-
-.stat-desc {
-  font-size: 16px;
-  color: rgba(0, 0, 0, 0.65);
-}
-
-/* Card color variants */
-.pink-card {
-  background-color: #ffeded;
-}
-
-.pink-card .stat-icon {
-  background-color: #f56a6a;
-  color: white;
-}
-
-.yellow-card {
-  background-color: #fef8e7;
-}
-
-.yellow-card .stat-icon {
-  background-color: #f7a356;
-  color: white;
-}
-
-.green-card {
-  background-color: #e8f7ed;
-}
-
-.green-card .stat-icon {
-  background-color: #56c974;
-  color: white;
-}
-
-.purple-card {
-  background-color: #f3f0ff;
-}
-
-.purple-card .stat-icon {
-  background-color: #7e6bf5;
-  color: white;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .dashboard-container {
-    padding: 16px;
-  }
-
-  .dashboard-section {
-    padding: 16px;
-  }
-
-  .stat-card {
-    height: 150px;
-    padding: 16px;
-  }
-
-  .stat-icon {
-    width: 40px;
-    height: 40px;
-    font-size: 18px;
-    margin-bottom: 12px;
-  }
-
-  .stat-value {
-    font-size: 24px;
-  }
-
-  .stat-desc {
-    font-size: 14px;
-  }
-}
-
-/* Transport table styling */
-.table-card {
-  border-radius: 8px;
-  padding: 0;
-  overflow: hidden;
-}
-
-.custom-pagination {
-  display: flex;
-  justify-content: center;
-  margin-top: 16px;
-  margin-bottom: 8px;
-}
-
-.custom-pagination .ant-pagination-item-active {
-  background-color: #1890ff;
-  border-color: #1890ff;
-}
-
-.custom-pagination .ant-pagination-item-active a {
-  color: white;
-}
-
-/* Summary cards for transport stats */
-.stat-summary-card {
-  border-radius: 8px;
-  padding: 16px;
-  border: none;
-}
-
-.stat-summary-content {
-  display: flex;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.stat-summary-value {
-  font-size: 32px;
-  font-weight: bold;
-  margin-right: 12px;
-}
-
-.stat-summary-badge {
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-}
-
-.stat-summary-label {
-  font-size: 14px;
-  color: rgba(0, 0, 0, 0.65);
-}
-
-.success-card {
-  background-color: #1c9a74;
-  color: white;
-}
-
-.success-card .stat-summary-badge {
-  background-color: #e8f5f0;
-  color: #1c9a74;
-}
-
-.success-card .stat-summary-label {
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.failed-card {
-  background-color: #b63136;
-  color: white;
-}
-
-.failed-card .stat-summary-badge {
-  background-color: #f5e8e8;
-  color: #b63136;
-}
-
-.failed-card .stat-summary-label {
-  color: rgba(255, 255, 255, 0.85);
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .dashboard-container {
-    padding: 16px;
-  }
-
-  .stat-card {
-    height: 100px;
-  }
-
-  .stat-icon {
-    font-size: 18px;
-    width: 32px;
-    height: 32px;
-  }
-
-  .stat-summary-value {
-    font-size: 24px;
-  }
-}
-
+/* Card styles */
 .song-management-card {
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
@@ -266,14 +31,17 @@
 .card-actions {
   display: flex;
   align-items: center;
+  gap: 16px;
 }
 
+/* Pagination */
 .pagination-container {
   margin-top: 16px;
   display: flex;
   justify-content: flex-end;
 }
 
+/* Song detail styles */
 .song-header {
   margin-bottom: 20px;
 }
@@ -290,24 +58,58 @@
   margin-top: 20px;
 }
 
-.lyrics-content {
+/* Lyrics display */
+.lyrics-display {
   font-family: monospace;
-  white-space: pre-wrap;
-  line-height: 1.6;
+  font-size: 16px;
+  line-height: 1.5;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 4px;
 }
 
 .lyrics-line {
-  margin-bottom: 4px;
+  position: relative;
+  margin-bottom: 1.5em;
+  padding-top: 1.5em;
 }
 
+.empty-line {
+  height: 1.5em;
+}
+
+.chord-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: #1890ff;
+  font-weight: bold;
+  white-space: pre;
+}
+
+.chord {
+  display: inline-block;
+  margin-right: 1.5em;
+}
+
+.text-line {
+  position: relative;
+  white-space: pre;
+}
+
+/* Chord controls */
 .chord-controls {
   margin-top: 20px;
   padding-top: 16px;
   border-top: 1px solid #f0f0f0;
 }
 
-/* Responsive adjustments */
+/* Responsive styles */
 @media (max-width: 768px) {
+  .dashboard-container {
+    padding: 16px;
+  }
+
   .card-header {
     flex-direction: column;
     align-items: flex-start;
@@ -328,5 +130,26 @@
 
   .card-actions button {
     width: 100%;
+  }
+
+  .lyrics-display {
+    font-size: 14px;
+    padding: 12px;
+  }
+
+  .lyrics-line {
+    margin-bottom: 1.2em;
+    padding-top: 1.2em;
+  }
+}
+
+/* Print styles */
+@media print {
+  .lyrics-display {
+    font-size: 12pt;
+  }
+  
+  .chord-line {
+    color: #000;
   }
 }
