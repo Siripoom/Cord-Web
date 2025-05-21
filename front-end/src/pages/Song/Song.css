@@ -246,3 +246,87 @@
     font-size: 24px;
   }
 }
+
+.song-management-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.card-header h4 {
+  margin: 0;
+}
+
+.card-actions {
+  display: flex;
+  align-items: center;
+}
+
+.pagination-container {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.song-header {
+  margin-bottom: 20px;
+}
+
+.song-header h2 {
+  margin-bottom: 8px;
+}
+
+.song-header p {
+  margin-bottom: 8px;
+}
+
+.lyrics-card {
+  margin-top: 20px;
+}
+
+.lyrics-content {
+  font-family: monospace;
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+.lyrics-line {
+  margin-bottom: 4px;
+}
+
+.chord-controls {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .card-actions {
+    margin-top: 16px;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .card-actions input,
+  .card-actions .ant-select {
+    width: 100% !important;
+    margin-right: 0 !important;
+    margin-bottom: 8px;
+  }
+
+  .card-actions button {
+    width: 100%;
+  }
+}

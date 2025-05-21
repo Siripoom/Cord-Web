@@ -5,12 +5,12 @@ import {
   createSong,
   updateSong,
   deleteSong,
-  searchSongs,
-  getRecentSongs,
-  getPopularSongs,
+
+
+
 } from "../controllers/songController.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
-import isAdmin from "../middlewares/isAdmin.js";
+import isAdmin from "../middlewares/authMiddleware.js";
 import { body, query } from "express-validator";
 
 const router = express.Router();
@@ -73,9 +73,9 @@ const paginationValidation = [
 
 // Public routes
 router.get("/", paginationValidation, getAllSongs);
-router.get("/search", searchValidation, searchSongs);
-router.get("/recent", paginationValidation, getRecentSongs);
-router.get("/popular", paginationValidation, getPopularSongs);
+
+
+
 router.get("/:id", getSongById);
 
 // Protected routes - Admin only

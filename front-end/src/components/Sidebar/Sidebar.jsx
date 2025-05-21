@@ -4,7 +4,8 @@ import {
   UserOutlined,
   LogoutOutlined,
   PieChartOutlined,
-  AccountBookOutlined
+  TagsOutlined,
+  AccountBookOutlined,
 } from "@ant-design/icons";
 import "./Sidebar.css";
 import logo from "../../assets/truck 1.jpg"; // You may need to update this path
@@ -37,7 +38,14 @@ const Sidebar = () => {
           <AccountBookOutlined />
           <span>จัดการเนื้อเพลง</span>
         </NavLink>
-
+        <NavLink
+          to="/admin/categories"
+          className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
+          onClick={() => setActiveItem("categories")}
+        >
+          <TagsOutlined />
+          <span>จัดการหมวดหมู่</span>
+        </NavLink>
         <NavLink
           to="/admin/customers"
           className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}

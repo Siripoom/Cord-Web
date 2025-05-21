@@ -8,28 +8,26 @@ import { validationResult } from "express-validator";
  */
 export const getAllSongs = async (req, res) => {
   try {
+    // Parse pagination parameters with defaults
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
+    // Get total count for pagination
+    const totalSongs = await prisma.song.count();
+
+    // Get songs with pagination
     const songs = await prisma.song.findMany({
       skip,
       take: limit,
       include: {
         category: true,
-        createdBy: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
+       
       },
       orderBy: {
         createdAt: "desc",
       },
     });
-
-    const totalSongs = await prisma.song.count();
 
     res.status(200).json({
       success: true,
@@ -117,7 +115,7 @@ export const createSong = async (req, res) => {
         lyrics,
         defaultKey,
         categoryId, // Use UUID directly, no parsing needed
-        creatorId: req.user.id,
+        // creatorId: req.user.id,
       },
     });
 

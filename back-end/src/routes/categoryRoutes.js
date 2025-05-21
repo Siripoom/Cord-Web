@@ -8,7 +8,7 @@ import {
   getSongsByCategory,
 } from "../controllers/categoryController.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
-import isAdmin from "../middlewares/isAdmin.js";
+import isAdmin from "../middlewares/authMiddleware.js";
 import { body, query } from "express-validator";
 
 const router = express.Router();
