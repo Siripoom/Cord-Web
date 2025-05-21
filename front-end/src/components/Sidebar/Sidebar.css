@@ -53,11 +53,11 @@
 
 .nav-item:hover {
   background-color: #f5f6fa;
-  color: #f5a623;
+  color: #6342CE;
 }
 
 .nav-item.active {
-  background-color: #f5a623;
+  background-color: #6342CE;
   color: white;
 }
 

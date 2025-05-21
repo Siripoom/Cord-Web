@@ -7,17 +7,9 @@ import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
 
 // Admin Pages
-import Dashboard from "./pages/Dashboard/Dashboard";
-import Customers from "./pages/Customers/Customer";
-import Suppliers from "./pages/Suppliers/Supplier";
-import TruckQueues from "./pages/TruckQueus/TruckQueus";
-import UserAndTruck from "./pages/UserAndTruck/UserAndTruck";
-import Report from "./pages/Reports/Report";
-import Costs from "./pages/Cost/Costs";
+import Dashboard from "./pages/Song/Song";
 
-import Finance from "./pages/Accounts/Account";
-import InvoiceCustomerPDF from "./components/PDF/InvoiceCustomerPDF";
-// import Reports from "./pages/Reports/Reports";
+import Suppliers from "./pages/User/User";
 
 function App() {
   const [sidebarVisible, setSidebarVisible] = useState(true);
@@ -73,15 +65,7 @@ function App() {
               />
             }
           />
-          <Route
-            path="/admin/customers"
-            element={
-              <Customers
-                sidebarVisible={sidebarVisible}
-                toggleSidebar={toggleSidebar}
-              />
-            }
-          />
+
           <Route
             path="/admin/suppliers"
             element={
@@ -91,53 +75,6 @@ function App() {
               />
             }
           />
-          <Route
-            path="/admin/truck-queues"
-            element={
-              <TruckQueues
-                sidebarVisible={sidebarVisible}
-                toggleSidebar={toggleSidebar}
-              />
-            }
-          />
-          <Route
-            path="/admin/user-and-truck"
-            element={
-              <UserAndTruck
-                sidebarVisible={sidebarVisible}
-                toggleSidebar={toggleSidebar}
-              />
-            }
-          />
-          <Route
-            path="/admin/costs"
-            element={
-              <Costs
-                sidebarVisible={sidebarVisible}
-                toggleSidebar={toggleSidebar}
-              />
-            }
-          />
-          <Route
-            path="/admin/finance"
-            element={
-              <Finance
-                sidebarVisible={sidebarVisible}
-                toggleSidebar={toggleSidebar}
-              />
-            }
-          />
-          <Route
-            path="/admin/reports"
-            element={
-              <Report
-                sidebarVisible={sidebarVisible}
-                toggleSidebar={toggleSidebar}
-              />
-            }
-          />
-
-          <Route path="/admin/pdf" element={<InvoiceCustomerPDF />} />
         </Routes>
       </div>
     </BrowserRouter>

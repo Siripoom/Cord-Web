@@ -7,3 +7,38 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+
+model User {
+  id        String    @id @default(uuid())
+  name      String
+  email     String    @unique
+  password  String
+  role      String    @default("admin")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  songs     Song[]
+}
+
+model Song {
+  id          String     @id @default(uuid())
+  title       String
+  artist      String
+  lyrics      String     @db.Text
+  defaultKey  String
+  category    Category?  @relation(fields: [categoryId], references: [id])
+  categoryId  String?
+  createdBy   User       @relation(fields: [creatorId], references: [id])
+  creatorId   String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Category {
+  id          String     @id @default(uuid())
+  name        String     @unique
+  description String?
+  songs       Song[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}

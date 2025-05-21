@@ -34,16 +34,9 @@ import {
 import Sidebar from "../../components/Sidebar/Sidebar";
 import Header from "../../components/Header/Header";
 
-import "./Supplier.css";
+import "./User.css";
 import PropTypes from "prop-types";
-import {
-  addSupplier,
-  getSuppliers,
-  updateSupplier,
-  deleteSupplier,
-  updateProduct,
-  addProduct,
-} from "../../services/api"; // Mock API call
+
 import dayjs from "dayjs";
 
 const { Title, Text } = Typography;
