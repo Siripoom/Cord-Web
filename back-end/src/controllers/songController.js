@@ -2,31 +2,43 @@ import prisma from "../config/db.js";
 import { validationResult } from "express-validator";
 
 /**
+ * Helper ฟังก์ชัน แปลง lyrics raw string เป็น array ของ {word, chord}
+ * รูปแบบ raw สมมติ: "[C]เธอจะ [G7]ฉัน [F]แล้วนะ"
+ * ปรับตาม format input จริงได้ครับ
+ */
+function parseLyricsRaw(raw) {
+  const regex = /\[([^\]]+)\]([^\[]+)/g;
+  let result = [];
+  let match;
+  while ((match = regex.exec(raw)) !== null) {
+    result.push({ chord: match[1], word: match[2].trim() });
+  }
+  return result;
+}
+
+/**
  * @desc    Get all songs with pagination
  * @route   GET /api/songs
  * @access  Public
  */
 export const getAllSongs = async (req, res) => {
   try {
-    // Parse pagination parameters with defaults
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    // Get total count for pagination
     const totalSongs = await prisma.song.count();
 
-    // Get songs with pagination
     const songs = await prisma.song.findMany({
       skip,
       take: limit,
       include: {
         category: true,
-       
+        // creator: {
+        //   select: { id: true, name: true },
+        // },
       },
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: { createdAt: "desc" },
     });
 
     res.status(200).json({
@@ -50,22 +62,23 @@ export const getAllSongs = async (req, res) => {
 };
 
 /**
- * @desc    Get song by ID
+ * @desc    Get song by ID พร้อมเนื้อเพลงแยกคำ+คอร์ด
  * @route   GET /api/songs/:id
  * @access  Public
  */
 export const getSongById = async (req, res) => {
   try {
     const song = await prisma.song.findUnique({
-      where: { id: req.params.id }, // Use UUID directly, no parsing needed
+      where: { id: req.params.id },
       include: {
         category: true,
-        // createdBy: {
-        //   select: {
-        //     id: true,
-        //     name: true,
-        //   },
+        // creator: {
+        //   select: { id: true, name: true },
         // },
+        lyrics: {
+          orderBy: { wordOrder: "asc" },
+          select: { word: true, chord: true, wordOrder: true },
+        },
       },
     });
 
@@ -91,7 +104,7 @@ export const getSongById = async (req, res) => {
 };
 
 /**
- * @desc    Create a new song
+ * @desc    Create a new song พร้อมเพิ่มเนื้อเพลงแยกคำ+คอร์ด
  * @route   POST /api/songs
  * @access  Private/Admin
  */
@@ -108,21 +121,50 @@ export const createSong = async (req, res) => {
 
     const { title, artist, lyrics, defaultKey, categoryId } = req.body;
 
+    // สมมติ req.user.id มี user id ที่ login อยู่
+    const creatorId = req.user?.id || "some-default-id";
+
+    // สร้างเพลงก่อน
     const song = await prisma.song.create({
       data: {
         title,
         artist,
-        lyrics,
         defaultKey,
-        categoryId, // Use UUID directly, no parsing needed
-        // creatorId: req.user.id,
+        categoryId,
+        creatorId,
+      },
+    });
+
+    // แปลง lyrics raw string เป็น array ของคำ+คอร์ด
+    // ตัวอย่าง parse function ด้านบน
+    const parsedLyrics = parseLyricsRaw(lyrics);
+
+    // สร้าง Lyric ทีละคำ
+    const lyricsData = parsedLyrics.map((item, index) => ({
+      songId: song.id,
+      wordOrder: index,
+      word: item.word,
+      chord: item.chord,
+    }));
+
+    await prisma.lyric.createMany({
+      data: lyricsData,
+    });
+
+    // ดึงข้อมูลเพลงพร้อมเนื้อเพลงใหม่กลับมา
+    const createdSong = await prisma.song.findUnique({
+      where: { id: song.id },
+      include: {
+        lyrics: { orderBy: { wordOrder: "asc" } },
+        category: true,
+        creator: { select: { id: true, name: true } },
       },
     });
 
     res.status(201).json({
       success: true,
       message: "Song created successfully",
-      data: song,
+      data: createdSong,
     });
   } catch (error) {
     console.error("Error creating song:", error);
@@ -135,13 +177,12 @@ export const createSong = async (req, res) => {
 };
 
 /**
- * @desc    Update a song
+ * @desc    Update a song พร้อมแก้ไขเนื้อเพลง
  * @route   PUT /api/songs/:id
  * @access  Private/Admin
  */
 export const updateSong = async (req, res) => {
   try {
-    // Validate request
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
@@ -155,18 +196,9 @@ export const updateSong = async (req, res) => {
     }
 
     const songId = req.params.id;
-    const updateData = {};
-
-    // Only include fields that were actually provided
     const { title, artist, lyrics, defaultKey, categoryId } = req.body;
 
-    if (title !== undefined) updateData.title = title;
-    if (artist !== undefined) updateData.artist = artist;
-    if (lyrics !== undefined) updateData.lyrics = lyrics;
-    if (defaultKey !== undefined) updateData.defaultKey = defaultKey;
-    if (categoryId !== undefined) updateData.categoryId = categoryId;
-
-    // Check if song exists
+    // เช็คเพลงก่อนว่ามีหรือไม่
     const existingSong = await prisma.song.findUnique({
       where: { id: songId },
     });
@@ -178,12 +210,47 @@ export const updateSong = async (req, res) => {
       });
     }
 
-    // Update song
-    const updatedSong = await prisma.song.update({
+    // อัพเดตข้อมูลเพลงที่ไม่ใช่เนื้อเพลงก่อน
+    const updateData = {};
+    if (title !== undefined) updateData.title = title;
+    if (artist !== undefined) updateData.artist = artist;
+    if (defaultKey !== undefined) updateData.defaultKey = defaultKey;
+    if (categoryId !== undefined) updateData.categoryId = categoryId;
+
+    await prisma.song.update({
       where: { id: songId },
       data: updateData,
+    });
+
+    // ถ้ามี lyrics ให้ลบของเก่าก่อน แล้วเพิ่มของใหม่
+    if (lyrics !== undefined) {
+      // ลบ Lyric เก่าของเพลงนี้ทั้งหมด
+      await prisma.lyric.deleteMany({
+        where: { songId },
+      });
+
+      // แปลง lyrics raw เป็น array
+      const parsedLyrics = parseLyricsRaw(lyrics);
+
+      const lyricsData = parsedLyrics.map((item, index) => ({
+        songId,
+        wordOrder: index,
+        word: item.word,
+        chord: item.chord,
+      }));
+
+      await prisma.lyric.createMany({
+        data: lyricsData,
+      });
+    }
+
+    // ดึงข้อมูลเพลงพร้อมเนื้อเพลงกลับมา
+    const updatedSong = await prisma.song.findUnique({
+      where: { id: songId },
       include: {
+        lyrics: { orderBy: { wordOrder: "asc" } },
         category: true,
+        creator: { select: { id: true, name: true } },
       },
     });
 
@@ -195,7 +262,6 @@ export const updateSong = async (req, res) => {
   } catch (error) {
     console.error("Error updating song:", error);
 
-    // Handle Prisma specific errors
     if (error.code === "P2025") {
       return res.status(404).json({
         success: false,
@@ -220,16 +286,17 @@ export const updateSong = async (req, res) => {
     });
   }
 };
+
 /**
- * @desc    Delete a song
+ * @desc    Delete a song และเนื้อเพลงที่เกี่ยวข้อง
  * @route   DELETE /api/songs/:id
  * @access  Private/Admin
  */
 export const deleteSong = async (req, res) => {
   try {
-    // Check if song exists
+    // เช็คว่ามีเพลงหรือไม่
     const songExists = await prisma.song.findUnique({
-      where: { id: req.params.id }, // Use UUID directly
+      where: { id: req.params.id },
     });
 
     if (!songExists) {
@@ -239,8 +306,14 @@ export const deleteSong = async (req, res) => {
       });
     }
 
+    // ลบเนื้อเพลงก่อน (ถ้ามี)
+    await prisma.lyric.deleteMany({
+      where: { songId: req.params.id },
+    });
+
+    // ลบเพลง
     await prisma.song.delete({
-      where: { id: req.params.id }, // Use UUID directly
+      where: { id: req.params.id },
     });
 
     res.status(200).json({

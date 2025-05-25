@@ -87,8 +87,8 @@ router.get("/", getAllSongs);
 router.get("/:id", getSongById);
 
 // Protected routes
-router.post("/", authMiddleware, songValidation, createSong);
-router.put("/:id", authMiddleware, updateValidation, updateSong);
-router.delete("/:id", authMiddleware, deleteSong);
+router.post("/", songValidation, createSong);
+router.put("/:id", updateValidation, updateSong);
+router.delete("/:id", deleteSong);
 
 export default router;

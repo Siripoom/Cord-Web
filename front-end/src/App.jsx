@@ -15,7 +15,7 @@ function App() {
   const [sidebarVisible, setSidebarVisible] = useState(true);
   localStorage.setItem(
     "token",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijg4N2ZlMGYwLWUxZmYtNDBmNi1hZGIxLTNiNjk2OTNlNDk4NiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0NzIyODQ5MiwiZXhwIjoxNzQ5ODIwNDkyfQ.LzDW-_faQN_SssFMhjuVqSe1GnOKiDcN6156P4FNorA"
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjAwMDkwNTQ3LTUwMzQtNDBiMC05YTg2LWRlYmMyMDU3MzAyZiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0ODE5NDUyNCwiZXhwIjoxNzUwNzg2NTI0fQ.nv-CIUxGJItsk1dc1_fhm9UTANpWXSO882vo4bGVHtg"
   );
   // Handle screen resizing
   useEffect(() => {

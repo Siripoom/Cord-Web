@@ -1,0 +1,29 @@
+.chord-display {
+  font-family: "Sarabun", sans-serif;
+  font-size: 16px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+.chord-word {
+  display: inline-block;
+  position: relative;
+  margin: 0 4px 12px 4px;
+  text-align: center;
+  vertical-align: bottom;
+}
+
+.chord-text {
+  position: absolute;
+  top: -1.2em;
+  left: 50%;
+  transform: translateX(-50%);
+  font-weight: 700;
+  font-size: 0.9em;
+  color: #1890ff;
+  user-select: none;
+}
+
+.word-text {
+  display: inline-block;
+}

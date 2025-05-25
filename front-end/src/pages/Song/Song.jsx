@@ -21,11 +21,10 @@ import {
   EditOutlined,
   DeleteOutlined,
   EyeOutlined,
-  SwapOutlined,
 } from "@ant-design/icons";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import Header from "../../components/Header/Header";
-import ChordSheetJS from 'chordsheetjs';
+import ChordDisplay from "../../components/ChordDisplay"; // นำเข้าคอมโพเนนต์ใหม่
 import {
   getAllSongs,
   getSongById,
@@ -94,71 +93,6 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
     }
   };
 
-  const renderLyricsWithChords = (lyrics) => {
-    try {
-      // Process each line to separate chords and lyrics
-      return (
-        <div className="lyrics-display">
-          {lyrics.split('\n').map((line, i) => {
-            if (!line.trim()) {
-              return <div key={i} className="empty-line">&nbsp;</div>;
-            }
-
-            const parts = line.split(/(\[.*?\])/g).filter(Boolean);
-            const chordLine = parts
-              .map(part => part.match(/\[(.*?)\]/)?.[1] || '')
-              .filter(Boolean);
-            const textLine = parts
-              .map(part => part.replace(/\[.*?\]/g, ''))
-              .join('');
-
-            return (
-              <div key={i} className="lyrics-line">
-                {chordLine.length > 0 && (
-                  <div className="chord-line">
-                    {chordLine.map((chord, j) => (
-                      <span key={j} className="chord">
-                        {chord}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                <div className="text-line">{textLine}</div>
-              </div>
-            );
-          })}
-        </div>
-      );
-    } catch (error) {
-      console.error('Error rendering lyrics:', error);
-      return <pre className="lyrics-display">{lyrics}</pre>;
-    }
-  };
-
-  const transposeChords = (lyrics, fromKey, toKey) => {
-    try {
-      const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-      const fromIndex = notes.indexOf(fromKey);
-      const toIndex = notes.indexOf(toKey);
-      let semitones = toIndex - fromIndex;
-      if (semitones < 0) semitones += 12;
-
-      return lyrics.replace(/\[(.*?)\]/g, (match, chord) => {
-        const [, root, ...rest] = chord.match(/([A-G]#?)(.*)/) || [match, chord, ''];
-        const currentIndex = notes.indexOf(root);
-        if (currentIndex === -1) return match;
-
-        let newIndex = (currentIndex + semitones) % 12;
-        if (newIndex < 0) newIndex += 12;
-
-        return `[${notes[newIndex]}${rest.join('')}]`;
-      });
-    } catch (error) {
-      console.error('Error transposing:', error);
-      return lyrics;
-    }
-  };
-
   const handleSearch = () => {
     fetchSongs();
   };
@@ -188,16 +122,18 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
         : await createSong(songData);
 
       if (response.success) {
-        message.success(`Song ${selectedSong ? 'updated' : 'created'} successfully`);
+        message.success(
+          `Song ${selectedSong ? "updated" : "created"} successfully`
+        );
         fetchSongs(pagination.current, pagination.pageSize);
         setIsModalVisible(false);
         form.resetFields();
       } else {
-        message.error(response.message);
+        message.error(response.message || "An error occurred");
       }
     } catch (error) {
-      console.error('Error saving song:', error);
-      message.error('An error occurred while saving the song');
+      console.error("Error saving song:", error);
+      message.error("An error occurred while saving the song");
     }
   };
 
@@ -205,15 +141,15 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
     try {
       const response = await deleteSong(selectedSong.id);
       if (response.success) {
-        message.success('Song deleted successfully');
+        message.success("Song deleted successfully");
         fetchSongs(pagination.current, pagination.pageSize);
         setIsDeleteModalVisible(false);
       } else {
-        message.error(response.message);
+        message.error(response.message || "An error occurred while deleting");
       }
     } catch (error) {
-      console.error('Error deleting song:', error);
-      message.error('An error occurred while deleting the song');
+      console.error("Error deleting song:", error);
+      message.error("An error occurred while deleting the song");
     }
   };
 
@@ -223,10 +159,12 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
       if (response.success) {
         setSelectedSong(response.data);
         setIsSongDetailVisible(true);
+      } else {
+        message.error(response.message || "Failed to load song details");
       }
     } catch (error) {
-      console.error('Error fetching song details:', error);
-      message.error('Failed to load song details');
+      console.error("Error fetching song details:", error);
+      message.error("Failed to load song details");
     }
   };
 
@@ -358,11 +296,7 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
         footer={null}
         width={800}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSongSubmit}
-        >
+        <Form form={form} layout="vertical" onFinish={handleSongSubmit}>
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
@@ -392,19 +326,31 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
                 rules={[{ required: true, message: "กรุณาเลือกคีย์" }]}
               >
                 <Select>
-                  {['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].map(key => (
-                    <Option key={key} value={key}>{key}</Option>
+                  {[
+                    "C",
+                    "C#",
+                    "D",
+                    "D#",
+                    "E",
+                    "F",
+                    "F#",
+                    "G",
+                    "G#",
+                    "A",
+                    "A#",
+                    "B",
+                  ].map((key) => (
+                    <Option key={key} value={key}>
+                      {key}
+                    </Option>
                   ))}
                 </Select>
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item
-                name="categoryId"
-                label="หมวดหมู่"
-              >
+              <Form.Item name="categoryId" label="หมวดหมู่">
                 <Select allowClear>
-                  {categories.map(category => (
+                  {categories.map((category) => (
                     <Option key={category.id} value={category.id}>
                       {category.name}
                     </Option>
@@ -425,10 +371,12 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
 
           <Form.Item>
             <Space>
-              <Button onClick={() => {
-                setIsModalVisible(false);
-                form.resetFields();
-              }}>
+              <Button
+                onClick={() => {
+                  setIsModalVisible(false);
+                  form.resetFields();
+                }}
+              >
                 ยกเลิก
               </Button>
               <Button type="primary" htmlType="submit">
@@ -470,7 +418,7 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
             }}
           >
             แก้ไขเพลง
-          </Button>
+          </Button>,
         ]}
         width={800}
       >
@@ -479,45 +427,23 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
             <div className="song-header">
               <h2>{selectedSong.title}</h2>
               <p>ศิลปิน: {selectedSong.artist}</p>
-              <p>คีย์: <Tag color="blue">{selectedSong.defaultKey}</Tag></p>
+              <p>
+                คีย์: <Tag color="blue">{selectedSong.defaultKey}</Tag>
+              </p>
               {selectedSong.category && (
-                <p>หมวดหมู่: <Tag color="green">{selectedSong.category.name}</Tag></p>
+                <p>
+                  หมวดหมู่:{" "}
+                  <Tag color="green">{selectedSong.category.name}</Tag>
+                </p>
               )}
             </div>
 
-            <Card
-              title="เนื้อเพลงพร้อมคอร์ด"
-              className="lyrics-card"
-            >
-              {renderLyricsWithChords(selectedSong.lyrics)}
-
-              <div className="chord-controls">
-                <Space>
-                  <Button type="primary" icon={<SwapOutlined />}>
-                    เปลี่ยนคีย์
-                  </Button>
-                  <Select
-                    defaultValue={selectedSong.defaultKey}
-                    style={{ width: 80 }}
-                    onChange={(value) => {
-                      const transposedLyrics = transposeChords(
-                        selectedSong.lyrics,
-                        selectedSong.defaultKey,
-                        value
-                      );
-                      setSelectedSong({
-                        ...selectedSong,
-                        lyrics: transposedLyrics,
-                        defaultKey: value
-                      });
-                    }}
-                  >
-                    {['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].map(key => (
-                      <Option key={key} value={key}>{key}</Option>
-                    ))}
-                  </Select>
-                </Space>
-              </div>
+            <Card title="เนื้อเพลงพร้อมคอร์ด" className="lyrics-card">
+              {/* ใช้คอมโพเนนต์ ChordDisplay ที่สร้างขึ้นใหม่ */}
+              <ChordDisplay
+                lyrics={selectedSong.lyrics || []}
+                defaultKey={selectedSong.defaultKey}
+              />
             </Card>
           </div>
         )}
