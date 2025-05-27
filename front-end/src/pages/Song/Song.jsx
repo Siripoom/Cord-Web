@@ -128,7 +128,7 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
           const fullSong = response.data;
           console.log("Full song data for editing:", fullSong); // Debug log
 
-          // Convert lyrics array back to raw format
+          // Convert lyrics array back to raw format - แก้ไขส่วนนี้
           let lyricsRaw = "";
           if (fullSong.lyrics && Array.isArray(fullSong.lyrics)) {
             lyricsRaw = fullSong.lyrics
@@ -136,7 +136,7 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
                 const chordPart = item.chord ? `[${item.chord}]` : "";
                 return `${chordPart}${item.word}`;
               })
-              .join(" ");
+              .join(""); // เปลี่ยนจาก .join(" ") เป็น .join("") เพื่อไม่ให้เพิ่มช่องว่าง
           }
 
           form.setFieldsValue({

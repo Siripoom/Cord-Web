@@ -1,5 +1,10 @@
 import React, { useState } from "react";
 import { Button, Space, Select, Radio } from "antd";
+import {
+  AlignLeftOutlined,
+  AlignCenterOutlined,
+  CompressOutlined,
+} from "@ant-design/icons";
 import PropTypes from "prop-types";
 import "./ChordDisplay.css";
 
@@ -59,6 +64,7 @@ const FLAT_KEYS = [
 const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
   const [currentKey, setCurrentKey] = useState(defaultKey);
   const [notation, setNotation] = useState("sharp"); // 'sharp' or 'flat'
+  const [textAlign, setTextAlign] = useState("left"); // 'left', 'center', 'compact'
 
   // Function to transpose a chord
   const transposeChord = (chord, semitones, useFlats = false) => {
@@ -122,9 +128,26 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
     setCurrentKey(keyArray[currentIndex]);
   };
 
+  // Handle text alignment change
+  const handleTextAlignChange = (alignment) => {
+    setTextAlign(alignment);
+  };
+
   // Get available keys based on current notation
   const getAvailableKeys = () => {
     return notation === "flat" ? FLAT_KEYS : SHARP_KEYS;
+  };
+
+  // Get CSS classes for text alignment
+  const getAlignmentClass = () => {
+    switch (textAlign) {
+      case "center":
+        return "text-center";
+      case "compact":
+        return "text-compact";
+      default:
+        return "text-left";
+    }
   };
 
   return (
@@ -187,6 +210,36 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
               </Space>
             </div>
 
+            <div className="control-group">
+              <span className="control-label">จัดแนว:</span>
+              <Space>
+                <Button
+                  size="small"
+                  type={textAlign === "left" ? "primary" : "default"}
+                  icon={<AlignLeftOutlined />}
+                  onClick={() => handleTextAlignChange("left")}
+                >
+                  ซ้าย
+                </Button>
+                <Button
+                  size="small"
+                  type={textAlign === "center" ? "primary" : "default"}
+                  icon={<AlignCenterOutlined />}
+                  onClick={() => handleTextAlignChange("center")}
+                >
+                  กลาง
+                </Button>
+                <Button
+                  size="small"
+                  type={textAlign === "compact" ? "primary" : "default"}
+                  icon={<CompressOutlined />}
+                  onClick={() => handleTextAlignChange("compact")}
+                >
+                  กระชับ
+                </Button>
+              </Space>
+            </div>
+
             {currentKey !== defaultKey && (
               <div className="key-info">
                 <strong>เปลี่ยนจาก:</strong> {defaultKey} →{" "}
@@ -209,7 +262,7 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
         </div>
       )}
 
-      <div className="chord-display">
+      <div className={`chord-display ${getAlignmentClass()}`}>
         {lyrics && lyrics.length > 0 ? (
           lyrics.map((item, idx) => {
             const { word, chord } = item;

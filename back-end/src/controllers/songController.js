@@ -3,35 +3,85 @@ import { validationResult } from "express-validator";
 
 /**
  * Helper function to parse lyrics raw string to array of {word, chord}
- * Format: "[C]Hello [G]world [Am]song"
+ * Format: "[C]Hello[G]world[Am]song"
  * Returns: [{word: "Hello", chord: "C"}, {word: "world", chord: "G"}, {word: "song", chord: "Am"}]
+ */
+/**
+ * Helper function to parse lyrics raw string to array of {word, chord}
+ * Format: "Intro / Am / Am / [C]Hello[G]world[Am]song"
+ * Returns: [{word: "Intro / Am / Am / ", chord: null}, {word: "Hello", chord: "C"}, {word: "world", chord: "G"}, {word: "song", chord: "Am"}]
  */
 function parseLyricsRaw(raw) {
   if (!raw || typeof raw !== "string") return [];
 
   const result = [];
-  const parts = raw.split(/(\[[^\]]*\])/);
 
-  let currentChord = null;
+  // Check if there are any chords in the text
+  const hasChords = /\[[^\]]*\]/.test(raw);
 
-  for (let i = 0; i < parts.length; i++) {
-    const part = parts[i];
+  if (!hasChords) {
+    // No chords found, treat entire text as one word
+    result.push({
+      word: raw,
+      chord: null,
+    });
+    return result;
+  }
 
-    if (part.startsWith("[") && part.endsWith("]")) {
-      // This is a chord
-      currentChord = part.slice(1, -1);
-    } else if (part.trim()) {
-      // This is text
-      const words = part.trim().split(/\s+/);
-      words.forEach((word, index) => {
-        if (word) {
-          result.push({
-            word: word,
-            chord: index === 0 ? currentChord : null,
-          });
-        }
-      });
-      currentChord = null; // Reset chord after first word
+  // Extract all chords and their positions
+  const chords = [];
+  const chordRegex = /\[([^\]]*)\]/g;
+  let match;
+
+  while ((match = chordRegex.exec(raw)) !== null) {
+    chords.push({
+      chord: match[1],
+      position: match.index,
+      fullMatch: match[0],
+    });
+  }
+
+  let currentPos = 0;
+
+  for (let i = 0; i < chords.length; i++) {
+    const chordInfo = chords[i];
+
+    // Add any text before this chord (only if it exists)
+    if (chordInfo.position > currentPos) {
+      const textBefore = raw.substring(currentPos, chordInfo.position);
+      if (textBefore) {
+        result.push({
+          word: textBefore,
+          chord: null,
+        });
+      }
+    }
+
+    // Move position past the chord
+    currentPos = chordInfo.position + chordInfo.fullMatch.length;
+
+    // Find the text that follows this chord (until next chord or end)
+    let textAfter = "";
+    const nextChord = chords[i + 1];
+
+    if (nextChord) {
+      textAfter = raw.substring(currentPos, nextChord.position);
+    } else {
+      textAfter = raw.substring(currentPos);
+    }
+
+    // Add the text with the chord (even if text is empty)
+    result.push({
+      word: textAfter,
+      chord: chordInfo.chord,
+    });
+
+    // Update current position for next iteration
+    if (nextChord) {
+      currentPos = nextChord.position;
+    } else {
+      currentPos = raw.length;
+      break; // We've processed everything
     }
   }
 

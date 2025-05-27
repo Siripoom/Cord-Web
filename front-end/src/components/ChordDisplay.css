@@ -53,6 +53,32 @@
   overflow-wrap: break-word;
 }
 
+/* Text Alignment Classes */
+.chord-display.text-left {
+  text-align: left;
+}
+
+.chord-display.text-center {
+  text-align: center;
+  white-space: pre-line; /* Allow line breaks but center align */
+}
+
+.chord-display.text-compact {
+  text-align: left;
+  line-height: 1.8; /* Tighter line spacing */
+  font-size: 16px; /* Smaller font */
+  padding: 16px; /* Less padding */
+}
+
+.chord-display.text-compact .chord-word {
+  margin-right: 2px; /* Tighter spacing between words */
+}
+
+.chord-display.text-compact .chord-text {
+  font-size: 0.85em; /* Smaller chord text in compact mode */
+  top: -1.4em; /* Adjust position for smaller line height */
+}
+
 .chord-word {
   display: inline;
   position: relative;
@@ -61,7 +87,7 @@
 
 .chord-text {
   position: absolute;
-  top: -1.6em;
+  top: -1.7em;
   left: 0;
   font-weight: 700;
   font-size: 0.9em;
@@ -69,10 +95,10 @@
   user-select: none;
   white-space: nowrap;
   z-index: 1;
-  background-color: rgba(24, 144, 255, 0.1);
+  /* background-color: rgba(24, 144, 255, 0.1); */
   padding: 2px 6px;
   border-radius: 4px;
-  border: 1px solid rgba(24, 144, 255, 0.2);
+  /* border: 1px solid rgba(24, 144, 255, 0.2); */
 }
 
 .word-text {
@@ -118,6 +144,12 @@
   border-radius: 0 6px 6px 0;
 }
 
+/* Alignment button active states */
+.chord-controls .ant-btn[type="primary"] {
+  background-color: #1890ff;
+  border-color: #1890ff;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .chord-controls {
@@ -145,6 +177,12 @@
     padding: 16px;
   }
 
+  .chord-display.text-compact {
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 12px;
+  }
+
   .chord-text {
     font-size: 0.85em;
     top: -1.4em;
@@ -169,6 +207,11 @@
     border: none;
     box-shadow: none;
     background: transparent;
+  }
+
+  .chord-display.text-compact {
+    font-size: 12pt;
+    line-height: 1.6;
   }
 
   .chord-text {
