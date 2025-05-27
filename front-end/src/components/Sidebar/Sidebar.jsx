@@ -6,6 +6,7 @@ import {
   PieChartOutlined,
   TagsOutlined,
   AccountBookOutlined,
+  TeamOutlined, // เพิ่มไอคอนนี้
 } from "@ant-design/icons";
 import "./Sidebar.css";
 import logo from "../../assets/music.png"; // You may need to update this path
@@ -38,6 +39,7 @@ const Sidebar = () => {
           <AccountBookOutlined />
           <span>จัดการเนื้อเพลง</span>
         </NavLink>
+
         <NavLink
           to="/admin/categorie"
           className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
@@ -46,12 +48,13 @@ const Sidebar = () => {
           <TagsOutlined />
           <span>จัดการหมวดหมู่</span>
         </NavLink>
+
         <NavLink
-          to="/admin/customers"
+          to="/admin/users"
           className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
-          onClick={() => setActiveItem("customers")}
+          onClick={() => setActiveItem("users")}
         >
-          <UserOutlined />
+          <TeamOutlined />
           <span>จัดการผู้ใช้งาน</span>
         </NavLink>
 

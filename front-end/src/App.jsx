@@ -9,8 +9,7 @@ import Register from "./pages/Auth/Register";
 // Admin Pages
 import Dashboard from "./pages/Song/Song";
 import Category from "./pages/Categorys/Category";
-
-import Suppliers from "./pages/User/User";
+import UserManagement from "./pages/User/User";
 
 function App() {
   const [sidebarVisible, setSidebarVisible] = useState(true);
@@ -18,6 +17,7 @@ function App() {
     "token",
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjAwMDkwNTQ3LTUwMzQtNDBiMC05YTg2LWRlYmMyMDU3MzAyZiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0ODE5NDUyNCwiZXhwIjoxNzUwNzg2NTI0fQ.nv-CIUxGJItsk1dc1_fhm9UTANpWXSO882vo4bGVHtg"
   );
+
   // Handle screen resizing
   useEffect(() => {
     const handleResize = () => {
@@ -56,7 +56,7 @@ function App() {
           <Route path="/auth/register" element={<Register />} />
           <Route path="/auth/login" element={<Login />} />
 
-          {/* Admin Routes /admin/dashboard*/}
+          {/* Admin Routes */}
           <Route
             path="/"
             element={
@@ -77,9 +77,9 @@ function App() {
           />
 
           <Route
-            path="/admin/suppliers"
+            path="/admin/users"
             element={
-              <Suppliers
+              <UserManagement
                 sidebarVisible={sidebarVisible}
                 toggleSidebar={toggleSidebar}
               />

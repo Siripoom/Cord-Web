@@ -33,8 +33,6 @@ const Header = ({ title, toggleSidebar }) => {
 
   const menu = (
     <Menu>
-      <Menu.Item key="profile">โปรไฟล์</Menu.Item>
-      <Menu.Item key="settings">ตั้งค่า</Menu.Item>
       <Menu.Item key="logout" onClick={handleLogout}>
         ออกจากระบบ
       </Menu.Item>
@@ -80,7 +78,7 @@ const Header = ({ title, toggleSidebar }) => {
       <div className="header-user">
         <Dropdown overlay={menu} trigger={["click"]}>
           <div className="user-info">
-            <Avatar style={{ backgroundColor: "#f5a623" }}>
+            <Avatar style={{ backgroundColor: "#6342CE" }}>
               {user ? user.charAt(0).toUpperCase() : "U"}
             </Avatar>
             <div className="user-details">
