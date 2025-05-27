@@ -8,9 +8,14 @@
     "start": "node src/server.js",
     "migrate": "npx prisma migrate dev --name init",
     "generate": "npx prisma generate",
-    "db-seed": "npx prisma db seed",
+    "db-seed": "node prisma/seed.js",
     "db-pull": "npx prisma db pull",
-    "db-push": "npx prisma db push"
+    "db-push": "npx prisma db push",
+    "db-reset": "npx prisma migrate reset --force",
+    "studio": "npx prisma studio"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   },
   "keywords": [],
   "author": "",

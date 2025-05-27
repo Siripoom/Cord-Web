@@ -25,8 +25,8 @@ model Song {
   defaultKey  String
   category    Category? @relation(fields: [categoryId], references: [id])
   categoryId  String?
-  creator     User      @relation("UserSongs", fields: [creatorId], references: [id])
-  creatorId   String
+  creator     User?     @relation("UserSongs", fields: [creatorId], references: [id])
+  creatorId   String?   // Made optional
   lyrics      Lyric[]   @relation("SongLyrics")
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt

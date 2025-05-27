@@ -8,6 +8,7 @@ import Register from "./pages/Auth/Register";
 
 // Admin Pages
 import Dashboard from "./pages/Song/Song";
+import Category from "./pages/Categorys/Category";
 
 import Suppliers from "./pages/User/User";
 
@@ -60,6 +61,15 @@ function App() {
             path="/"
             element={
               <Dashboard
+                sidebarVisible={sidebarVisible}
+                toggleSidebar={toggleSidebar}
+              />
+            }
+          />
+          <Route
+            path="/admin/categorie"
+            element={
+              <Category
                 sidebarVisible={sidebarVisible}
                 toggleSidebar={toggleSidebar}
               />

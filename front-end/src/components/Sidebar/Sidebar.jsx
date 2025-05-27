@@ -39,7 +39,7 @@ const Sidebar = () => {
           <span>จัดการเนื้อเพลง</span>
         </NavLink>
         <NavLink
-          to="/admin/categories"
+          to="/admin/categorie"
           className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
           onClick={() => setActiveItem("categories")}
         >
