@@ -8,7 +8,7 @@ import {
   AccountBookOutlined,
 } from "@ant-design/icons";
 import "./Sidebar.css";
-import logo from "../../assets/truck 1.jpg"; // You may need to update this path
+import logo from "../../assets/music.png"; // You may need to update this path
 
 const Sidebar = () => {
   const navigate = useNavigate();
@@ -26,7 +26,7 @@ const Sidebar = () => {
     <div className="sidebar">
       <div className="sidebar-logo">
         <img src={logo} alt="TransTrack Logo" className="logo-icon" />
-        <h2 className="logo-text">Cord Style</h2>
+        <h2 className="logo-text">Chord Style</h2>
       </div>
 
       <nav className="sidebar-nav">

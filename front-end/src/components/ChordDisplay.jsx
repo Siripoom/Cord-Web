@@ -217,6 +217,11 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
               ? transposeChord(chord, semitonesDiff, notation === "flat")
               : null;
 
+            // จัดการกับบรรทัดใหม่
+            if (word === "\n" || word === "\r\n") {
+              return <br key={idx} />;
+            }
+
             return (
               <span key={idx} className="chord-word">
                 {transposedChord && (
