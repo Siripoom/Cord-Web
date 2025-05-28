@@ -1,42 +1,48 @@
 import { useState } from "react";
-import { Input, Button, Card, message } from "antd";
-import { UserOutlined, LockOutlined } from "@ant-design/icons";
-import logo from "../../assets/ambulance 1.png";
-import { Link } from "react-router-dom";
+import { Input, Button, Card, message, Form, Divider } from "antd";
+import {
+  UserOutlined,
+  LockOutlined,
+  EyeInvisibleOutlined,
+  EyeTwoTone,
+} from "@ant-design/icons";
+import { Link, useNavigate } from "react-router-dom";
 import { login } from "../../services/api";
 import { jwtDecode } from "jwt-decode";
-import { useNavigate } from "react-router-dom";
+import "./Login.css";
 
 export default function Login() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [form] = Form.useForm();
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      message.warning("กรุณากรอกอีเมลและรหัสผ่าน");
-      return;
-    }
-
+  const handleLogin = async (values) => {
     setLoading(true);
     try {
-      const data = { email, password };
+      const data = {
+        email: values.email.trim(),
+        password: values.password,
+      };
       const res = await login(data);
 
       if (res && res.token) {
         localStorage.setItem("token", res.token);
         message.success("เข้าสู่ระบบสำเร็จ");
-        const token = localStorage.getItem("token"); // ดึง token จาก localStorage
+
+        const token = localStorage.getItem("token");
         if (token) {
           try {
-            const decodedToken = jwtDecode(token); // decode token
-            //Check role
-            navigate("/admin/dashboard");
-
+            const decodedToken = jwtDecode(token);
+            // Check role and redirect accordingly
+            if (decodedToken.role === "admin") {
+              navigate("/admin/dashboard");
+            } else {
+              navigate("/");
+            }
             console.log(decodedToken);
           } catch (error) {
             console.error("Error decoding token:", error);
+            navigate("/");
           }
         }
       } else {
@@ -51,56 +57,116 @@ export default function Login() {
   };
 
   return (
-    <>
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-blue-50 to-blue-100">
-        <Card className="p-10 rounded-3xl shadow-xl w-[400px] bg-white border border-gray-200">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-700">
-              🚑 ระบบรับส่งผู้ป่วย
-            </h2>
-            <p className="text-gray-500 text-sm ">
-              เข้าสู่ระบบเพื่อดำเนินการต่อ
-            </p>
-          </div>
-          <div className="mt-8 space-y-5">
-            <Input
-              size="large"
-              placeholder="อีเมล"
-              prefix={<UserOutlined className="text-gray-400" />}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="rounded-lg"
-            />
-
-            <Input.Password
-              size="large"
-              placeholder="รหัสผ่าน"
-              prefix={<LockOutlined className="text-gray-400" />}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="rounded-lg"
-            />
-            <Button
-              type="primary"
-              size="large"
-              block
-              className="bg-blue-600 hover:bg-blue-700 transition-all duration-300 rounded-lg font-medium"
-              onClick={handleLogin}
-            >
-              เข้าสู่ระบบ
-            </Button>
-            <p className="text-center text-gray-500 text-sm mt-4">
-              ไม่มีบัญชี?{" "}
-              <Link
-                to="/auth/register"
-                className="text-blue-600 hover:underline"
-              >
-                สมัครสมาชิก
-              </Link>
-            </p>
-          </div>
-        </Card>
+    <div className="login-container">
+      {/* Background Elements */}
+      <div className="background-elements">
+        <div className="circle circle-1"></div>
+        <div className="circle circle-2"></div>
+        <div className="circle circle-3"></div>
+        <div className="wave wave-1"></div>
+        <div className="wave wave-2"></div>
       </div>
-    </>
+
+      <div className="login-content">
+        {/* Left Side - Branding */}
+        <div className="login-left">
+          <div className="brand-section">
+            <div className="brand-logo">
+              <div className="logo-icon">🎵</div>
+              <h1 className="brand-title">Chord Style</h1>
+            </div>
+            <p className="brand-subtitle">ยินดีต้อนรับสู่แพลตฟอร์มคอร์ดเพลง</p>
+            <div className="feature-list">
+              <div className="feature-item">
+                <div className="feature-icon">🎸</div>
+                <span>คอร์ดเพลงครบครัน</span>
+              </div>
+              <div className="feature-item">
+                <div className="feature-icon">🎼</div>
+                <span>ปรับคีย์ได้ตามต้องการ</span>
+              </div>
+              <div className="feature-item">
+                <div className="feature-icon">📱</div>
+                <span>ใช้งานง่ายทุกอุปกรณ์</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Side - Login Form */}
+        <div className="login-right">
+          <Card className="login-card">
+            <div className="login-header">
+              <h2 className="login-title">เข้าสู่ระบบ</h2>
+              <p className="login-subtitle">
+                ยินดีต้อนรับกลับมา! กรุณาเข้าสู่ระบบ
+              </p>
+            </div>
+
+            <Form
+              form={form}
+              name="login-form"
+              onFinish={handleLogin}
+              layout="vertical"
+              size="large"
+              className="login-form"
+            >
+              <Form.Item
+                name="email"
+                label="อีเมล"
+                rules={[
+                  { required: true, message: "กรุณากรอกอีเมล" },
+                  { type: "email", message: "รูปแบบอีเมลไม่ถูกต้อง" },
+                ]}
+              >
+                <Input
+                  prefix={<UserOutlined className="input-icon" />}
+                  placeholder="กรอกอีเมลของคุณ"
+                  className="custom-input"
+                />
+              </Form.Item>
+
+              <Form.Item
+                name="password"
+                label="รหัสผ่าน"
+                rules={[
+                  { required: true, message: "กรุณากรอกรหัสผ่าน" },
+                  { min: 6, message: "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร" },
+                ]}
+              >
+                <Input.Password
+                  prefix={<LockOutlined className="input-icon" />}
+                  placeholder="กรอกรหัสผ่านของคุณ"
+                  className="custom-input"
+                  iconRender={(visible) =>
+                    visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
+                  }
+                />
+              </Form.Item>
+
+              <div className="form-options">
+                <div className="remember-forgot">
+                  <Link to="/auth/forgot-password" className="forgot-link">
+                    ลืมรหัสผ่าน?
+                  </Link>
+                </div>
+              </div>
+
+              <Form.Item className="login-button-item">
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={loading}
+                  className="login-button"
+                  block
+                >
+                  เข้าสู่ระบบ
+                </Button>
+              </Form.Item>
+            </Form>
+          </Card>
+        </div>
+      </div>
+    </div>
   );
 }

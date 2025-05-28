@@ -20,19 +20,19 @@ const Sidebar = () => {
     localStorage.removeItem("username");
     localStorage.removeItem("user_id");
     localStorage.removeItem("role");
-    navigate("/");
+    navigate("/songs");
   };
 
   return (
     <div className="sidebar">
       <div className="sidebar-logo">
-        <img src={logo} alt="TransTrack Logo" className="logo-icon" />
+        <img src={logo} alt="Chord Style Logo" className="logo-icon" />
         <h2 className="logo-text">Chord Style</h2>
       </div>
 
       <nav className="sidebar-nav">
         <NavLink
-          to="/"
+          to="/admin/dashboard"
           className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
           onClick={() => setActiveItem("dashboard")}
         >
@@ -58,7 +58,7 @@ const Sidebar = () => {
           <span>จัดการผู้ใช้งาน</span>
         </NavLink>
 
-        <div className="nav-item" onClick={handleLogout}>
+        <div className="nav-item logout-item" onClick={handleLogout}>
           <LogoutOutlined />
           <span>ออกจากระบบ</span>
         </div>

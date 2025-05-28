@@ -1,9 +1,12 @@
-import React, { useState } from "react";
-import { Button, Space, Select, Radio } from "antd";
+import React, { useState, useEffect, useRef } from "react";
+import { Button, Space, Select, Radio, Slider } from "antd";
 import {
   AlignLeftOutlined,
   AlignCenterOutlined,
   CompressOutlined,
+  PlayCircleOutlined,
+  PauseCircleOutlined,
+  StepForwardOutlined,
 } from "@ant-design/icons";
 import PropTypes from "prop-types";
 import "./ChordDisplay.css";
@@ -65,6 +68,44 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
   const [currentKey, setCurrentKey] = useState(defaultKey);
   const [notation, setNotation] = useState("sharp"); // 'sharp' or 'flat'
   const [textAlign, setTextAlign] = useState("left"); // 'left', 'center', 'compact'
+  const [isAutoScrolling, setIsAutoScrolling] = useState(false);
+  const [scrollSpeed, setScrollSpeed] = useState(3); // 1-10 scale
+  const intervalRef = useRef(null);
+  const displayRef = useRef(null);
+
+  // Auto scroll effect
+  useEffect(() => {
+    if (isAutoScrolling) {
+      // Convert speed (1-10) to pixels per interval (slower = higher number)
+      const pixelsPerScroll = scrollSpeed * 2; // 2-20 pixels per scroll
+      const interval = 100; // milliseconds between scrolls
+
+      intervalRef.current = setInterval(() => {
+        if (displayRef.current) {
+          const element = displayRef.current;
+          const maxScroll = element.scrollHeight - element.clientHeight;
+
+          if (element.scrollTop >= maxScroll) {
+            // Reached bottom, stop auto scroll
+            setIsAutoScrolling(false);
+          } else {
+            element.scrollTop += pixelsPerScroll;
+          }
+        }
+      }, interval);
+    } else {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [isAutoScrolling, scrollSpeed]);
 
   // Function to transpose a chord
   const transposeChord = (chord, semitones, useFlats = false) => {
@@ -131,6 +172,24 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
   // Handle text alignment change
   const handleTextAlignChange = (alignment) => {
     setTextAlign(alignment);
+  };
+
+  // Handle auto scroll toggle
+  const handleAutoScrollToggle = () => {
+    setIsAutoScrolling(!isAutoScrolling);
+  };
+
+  // Handle scroll speed change
+  const handleScrollSpeedChange = (value) => {
+    setScrollSpeed(value);
+  };
+
+  // Reset scroll to top
+  const handleScrollToTop = () => {
+    if (displayRef.current) {
+      displayRef.current.scrollTop = 0;
+    }
+    setIsAutoScrolling(false);
   };
 
   // Get available keys based on current notation
@@ -240,6 +299,53 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
               </Space>
             </div>
 
+            {/* Auto Scroll Controls */}
+            <div className="control-group auto-scroll-group">
+              <span className="control-label">Auto Scroll:</span>
+              <Space>
+                <Button
+                  size="small"
+                  type={isAutoScrolling ? "primary" : "default"}
+                  icon={
+                    isAutoScrolling ? (
+                      <PauseCircleOutlined />
+                    ) : (
+                      <PlayCircleOutlined />
+                    )
+                  }
+                  onClick={handleAutoScrollToggle}
+                >
+                  {isAutoScrolling ? "หยุด" : "เล่น"}
+                </Button>
+                <Button
+                  size="small"
+                  icon={<StepForwardOutlined />}
+                  onClick={handleScrollToTop}
+                  title="กลับไปด้านบน"
+                >
+                  ด้านบน
+                </Button>
+              </Space>
+            </div>
+
+            {/* Speed Control */}
+            <div className="control-group speed-control">
+              <span className="control-label">ความเร็ว:</span>
+              <div className="speed-slider">
+                <Slider
+                  min={1}
+                  max={10}
+                  value={scrollSpeed}
+                  onChange={handleScrollSpeedChange}
+                  style={{ width: 100 }}
+                  tooltip={{
+                    formatter: (value) => `${value}/10`,
+                  }}
+                />
+                <span className="speed-indicator">{scrollSpeed}/10</span>
+              </div>
+            </div>
+
             {currentKey !== defaultKey && (
               <div className="key-info">
                 <strong>เปลี่ยนจาก:</strong> {defaultKey} →{" "}
@@ -262,7 +368,12 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
         </div>
       )}
 
-      <div className={`chord-display ${getAlignmentClass()}`}>
+      <div
+        ref={displayRef}
+        className={`chord-display ${getAlignmentClass()} ${
+          isAutoScrolling ? "auto-scrolling" : ""
+        }`}
+      >
         {lyrics && lyrics.length > 0 ? (
           lyrics.map((item, idx) => {
             const { word, chord } = item;
