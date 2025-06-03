@@ -1,13 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Button, Space, Select, Radio, Slider } from "antd";
-import {
-  AlignLeftOutlined,
-  AlignCenterOutlined,
-  CompressOutlined,
-  PlayCircleOutlined,
-  PauseCircleOutlined,
-  StepForwardOutlined,
-} from "@ant-design/icons";
+import { Select, Modal } from "antd";
 import PropTypes from "prop-types";
 import "./ChordDisplay.css";
 
@@ -66,31 +58,36 @@ const FLAT_KEYS = [
 
 const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
   const [currentKey, setCurrentKey] = useState(defaultKey);
-  const [notation, setNotation] = useState("sharp"); // 'sharp' or 'flat'
-  const [textAlign, setTextAlign] = useState("left"); // 'left', 'center', 'compact'
+  const [notation, setNotation] = useState("sharp");
+  const [textAlign, setTextAlign] = useState("left");
+  const [scrollMode, setScrollMode] = useState("step"); // "step" หรือ "auto"
   const [isAutoScrolling, setIsAutoScrolling] = useState(false);
-  const [scrollSpeed, setScrollSpeed] = useState(3); // 1-10 scale
+  const [scrollSpeed, setScrollSpeed] = useState(3);
+  const [showKeyModal, setShowKeyModal] = useState(false);
   const intervalRef = useRef(null);
   const displayRef = useRef(null);
 
-  // Auto scroll effect
+  // Auto scroll effect - เลื่อนทั้งหน้าจอ
   useEffect(() => {
     if (isAutoScrolling) {
-      // Convert speed (1-10) to pixels per interval (slower = higher number)
-      const pixelsPerScroll = scrollSpeed * 2; // 2-20 pixels per scroll
-      const interval = 100; // milliseconds between scrolls
+      const pixelsPerScroll = scrollSpeed * 2;
+      const interval = scrollMode === "step" ? (11 - scrollSpeed) * 100 : 100;
 
       intervalRef.current = setInterval(() => {
-        if (displayRef.current) {
-          const element = displayRef.current;
-          const maxScroll = element.scrollHeight - element.clientHeight;
+        const currentScroll =
+          window.pageYOffset || document.documentElement.scrollTop;
+        const maxScroll =
+          document.documentElement.scrollHeight - window.innerHeight;
 
-          if (element.scrollTop >= maxScroll) {
-            // Reached bottom, stop auto scroll
-            setIsAutoScrolling(false);
-          } else {
-            element.scrollTop += pixelsPerScroll;
-          }
+        if (currentScroll >= maxScroll) {
+          // Reached bottom, stop auto scroll
+          setIsAutoScrolling(false);
+        } else {
+          // Scroll the entire page
+          window.scrollBy({
+            top: pixelsPerScroll,
+            behavior: "smooth",
+          });
         }
       }, interval);
     } else {
@@ -105,13 +102,12 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
         clearInterval(intervalRef.current);
       }
     };
-  }, [isAutoScrolling, scrollSpeed]);
+  }, [isAutoScrolling, scrollSpeed, scrollMode]);
 
   // Function to transpose a chord
   const transposeChord = (chord, semitones, useFlats = false) => {
     if (!chord || semitones === 0) return chord;
 
-    // Extract the root note and suffix (e.g., "Am7" -> "A" + "m7")
     const match = chord.match(/^([A-G][#b]?)(.*)$/);
     if (!match) return chord;
 
@@ -119,7 +115,6 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
     const rootIndex = CHORD_MAP[root];
     if (rootIndex === undefined) return chord;
 
-    // Calculate new root note
     const newRootIndex = (rootIndex + semitones + 12) % 12;
     const keyArray = useFlats ? FLAT_KEYS : SHARP_KEYS;
     const newRoot = keyArray[newRootIndex];
@@ -127,7 +122,7 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
     return newRoot + suffix;
   };
 
-  // Calculate semitones difference between current key and default key
+  // Calculate semitones difference
   const getSemitonesDiff = () => {
     const defaultIndex = CHORD_MAP[defaultKey] || 0;
     const currentIndex = CHORD_MAP[currentKey] || 0;
@@ -135,11 +130,6 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
   };
 
   const semitonesDiff = getSemitonesDiff();
-
-  // Handle key change
-  const handleKeyChange = (newKey) => {
-    setCurrentKey(newKey);
-  };
 
   // Handle transpose buttons
   const handleTranspose = (direction) => {
@@ -158,38 +148,49 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
     setCurrentKey(defaultKey);
   };
 
-  // Handle notation change (sharp/flat)
-  const handleNotationChange = (e) => {
-    const newNotation = e.target.value;
-    setNotation(newNotation);
-
-    // Convert current key to new notation
-    const currentIndex = CHORD_MAP[currentKey] || 0;
-    const keyArray = newNotation === "flat" ? FLAT_KEYS : SHARP_KEYS;
-    setCurrentKey(keyArray[currentIndex]);
+  // Handle key selection from modal
+  const handleKeyChange = (newKey) => {
+    setCurrentKey(newKey);
+    setShowKeyModal(false);
   };
 
-  // Handle text alignment change
-  const handleTextAlignChange = (alignment) => {
-    setTextAlign(alignment);
+  // Handle view mode change
+  const handleViewChange = (view) => {
+    setTextAlign(view);
   };
 
-  // Handle auto scroll toggle
-  const handleAutoScrollToggle = () => {
-    setIsAutoScrolling(!isAutoScrolling);
+  // Handle scroll mode change
+  const handleScrollChange = (mode) => {
+    setScrollMode(mode);
+    if (mode === "auto") {
+      setIsAutoScrolling(true);
+    } else {
+      setIsAutoScrolling(false);
+      // Scroll to top when switching to step mode
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }
   };
 
   // Handle scroll speed change
-  const handleScrollSpeedChange = (value) => {
-    setScrollSpeed(value);
+  const handleScrollSpeedChange = (speed) => {
+    setScrollSpeed(speed);
+  };
+
+  // Start/Stop scrolling for step mode
+  const toggleStepScrolling = () => {
+    setIsAutoScrolling(!isAutoScrolling);
   };
 
   // Reset scroll to top
-  const handleScrollToTop = () => {
-    if (displayRef.current) {
-      displayRef.current.scrollTop = 0;
-    }
+  const scrollToTop = () => {
     setIsAutoScrolling(false);
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
   // Get available keys based on current notation
@@ -213,158 +214,146 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
     <div className="chord-display-container">
       {showTransposeControls && (
         <div className="chord-controls">
-          <Space wrap size="middle">
-            <div className="control-group">
-              <span className="control-label">คีย์ปัจจุบัน:</span>
-              <Select
-                value={currentKey}
-                onChange={handleKeyChange}
-                style={{ width: 80 }}
+          {/* Key Control Section */}
+          <div className="key-control-section">
+            <h3 className="key-section-title">เพิ่มลดคีย์เพลง</h3>
+
+            <div className="key-selector-container">
+              <button
+                className="transpose-btn"
+                onClick={() => handleTranspose("down")}
+                aria-label="ลดคีย์"
               >
-                {getAvailableKeys().map((key) => (
-                  <Option key={key} value={key}>
-                    {key}
-                  </Option>
-                ))}
-              </Select>
-            </div>
+                −
+              </button>
 
-            <div className="control-group">
-              <span className="control-label">รูปแบบ:</span>
-              <Radio.Group
-                value={notation}
-                onChange={handleNotationChange}
-                size="small"
+              <button
+                className="current-key-display"
+                onClick={() => setShowKeyModal(true)}
               >
-                <Radio.Button value="sharp">♯ Sharp</Radio.Button>
-                <Radio.Button value="flat">♭ Flat</Radio.Button>
-              </Radio.Group>
+                Key {currentKey}
+              </button>
+
+              <button
+                className="transpose-btn"
+                onClick={() => handleTranspose("up")}
+                aria-label="เพิ่มคีย์"
+              >
+                +
+              </button>
             </div>
 
-            <div className="control-group">
-              <span className="control-label">ปรับคีย์:</span>
-              <Space>
-                <Button
-                  size="small"
-                  onClick={() => handleTranspose("down")}
-                  icon="♭"
-                >
-                  ลดคีย์
-                </Button>
-                <Button
-                  size="small"
-                  onClick={() => handleTranspose("up")}
-                  icon="♯"
-                >
-                  เพิ่มคีย์
-                </Button>
-                <Button
-                  size="small"
-                  onClick={resetKey}
-                  disabled={currentKey === defaultKey}
-                  type="dashed"
-                >
-                  รีเซต
-                </Button>
-              </Space>
-            </div>
+            {/* <div className="original-key-info">Original Key</div> */}
 
-            <div className="control-group">
-              <span className="control-label">จัดแนว:</span>
-              <Space>
-                <Button
-                  size="small"
-                  type={textAlign === "left" ? "primary" : "default"}
-                  icon={<AlignLeftOutlined />}
-                  onClick={() => handleTextAlignChange("left")}
-                >
-                  ซ้าย
-                </Button>
-                <Button
-                  size="small"
-                  type={textAlign === "center" ? "primary" : "default"}
-                  icon={<AlignCenterOutlined />}
-                  onClick={() => handleTextAlignChange("center")}
-                >
-                  กลาง
-                </Button>
-                <Button
-                  size="small"
-                  type={textAlign === "compact" ? "primary" : "default"}
-                  icon={<CompressOutlined />}
-                  onClick={() => handleTextAlignChange("compact")}
-                >
-                  กระชับ
-                </Button>
-              </Space>
-            </div>
+            <button
+              className="reset-btn"
+              onClick={resetKey}
+              disabled={currentKey === defaultKey}
+            >
+              Reset
+            </button>
+          </div>
 
-            {/* Auto Scroll Controls */}
-            <div className="control-group auto-scroll-group">
-              <span className="control-label">Auto Scroll:</span>
-              <Space>
-                <Button
-                  size="small"
-                  type={isAutoScrolling ? "primary" : "default"}
-                  icon={
-                    isAutoScrolling ? (
-                      <PauseCircleOutlined />
-                    ) : (
-                      <PlayCircleOutlined />
-                    )
-                  }
-                  onClick={handleAutoScrollToggle}
+          {/* View Controls */}
+          <div className="view-controls">
+            <div className="view-section">
+              <span className="view-label">View :</span>
+              <div className="view-toggle">
+                <button
+                  className={`view-option ${
+                    textAlign === "left" ? "active" : ""
+                  }`}
+                  onClick={() => handleViewChange("left")}
                 >
-                  {isAutoScrolling ? "หยุด" : "เล่น"}
-                </Button>
-                <Button
-                  size="small"
-                  icon={<StepForwardOutlined />}
-                  onClick={handleScrollToTop}
-                  title="กลับไปด้านบน"
+                  ⊞ Horizontal
+                </button>
+                <button
+                  className={`view-option ${
+                    textAlign === "center" ? "active" : ""
+                  }`}
+                  onClick={() => handleViewChange("center")}
                 >
-                  ด้านบน
-                </Button>
-              </Space>
-            </div>
-
-            {/* Speed Control */}
-            <div className="control-group speed-control">
-              <span className="control-label">ความเร็ว:</span>
-              <div className="speed-slider">
-                <Slider
-                  min={1}
-                  max={10}
-                  value={scrollSpeed}
-                  onChange={handleScrollSpeedChange}
-                  style={{ width: 100 }}
-                  tooltip={{
-                    formatter: (value) => `${value}/10`,
-                  }}
-                />
-                <span className="speed-indicator">{scrollSpeed}/10</span>
+                  ⊞ Vertical
+                </button>
               </div>
             </div>
+          </div>
 
-            {currentKey !== defaultKey && (
-              <div className="key-info">
-                <strong>เปลี่ยนจาก:</strong> {defaultKey} →{" "}
-                <strong>{currentKey}</strong>
-                {semitonesDiff > 0 && (
-                  <span className="transpose-info">
-                    {" "}
-                    (+{semitonesDiff} ขั้น)
-                  </span>
-                )}
-                {semitonesDiff < 0 && (
-                  <span className="transpose-info">
-                    {" "}
-                    ({semitonesDiff} ขั้น)
-                  </span>
-                )}
+          {/* Scroll Controls */}
+          <div className="scroll-controls">
+            <span className="scroll-label">Scroll :</span>
+            <div className="scroll-toggle">
+              <button
+                className={`scroll-option ${
+                  scrollMode === "step" ? "active" : ""
+                }`}
+                onClick={() => handleScrollChange("step")}
+              >
+                Step
+              </button>
+              <button
+                className={`scroll-option ${
+                  scrollMode === "auto" ? "active" : ""
+                }`}
+                onClick={() => handleScrollChange("auto")}
+              >
+                Auto
+              </button>
+            </div>
+          </div>
+
+          {/* Speed Control - แสดงเมื่อเลือก Step mode */}
+          {scrollMode === "step" && (
+            <div className="speed-controls">
+              <div className="speed-section">
+                <span className="speed-label">ความเร็ว:</span>
+                <div className="speed-buttons">
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((speed) => (
+                    <button
+                      key={speed}
+                      className={`speed-btn ${
+                        scrollSpeed === speed ? "active" : ""
+                      }`}
+                      onClick={() => handleScrollSpeedChange(speed)}
+                    >
+                      {speed}
+                    </button>
+                  ))}
+                </div>
               </div>
-            )}
-          </Space>
+
+              <div className="scroll-action-buttons">
+                <button
+                  className={`scroll-control-btn ${
+                    isAutoScrolling ? "stop" : "start"
+                  }`}
+                  onClick={toggleStepScrolling}
+                >
+                  {isAutoScrolling ? "⏸️ หยุด" : "▶️ เริ่ม"}
+                </button>
+                <button
+                  className="scroll-control-btn reset"
+                  onClick={scrollToTop}
+                >
+                  ⏫ กลับด้านบน
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Key Info Display */}
+          {currentKey !== defaultKey && (
+            <div className="key-info">
+              <strong>เปลี่ยนจาก:</strong> {defaultKey} →{" "}
+              <strong>{currentKey}</strong>
+              {semitonesDiff > 0 && (
+                <span className="transpose-info"> (+{semitonesDiff} ขั้น)</span>
+              )}
+              {semitonesDiff < 0 && (
+                <span className="transpose-info"> ({semitonesDiff} ขั้น)</span>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -373,6 +362,7 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
         className={`chord-display ${getAlignmentClass()} ${
           isAutoScrolling ? "auto-scrolling" : ""
         }`}
+        data-speed={scrollSpeed}
       >
         {lyrics && lyrics.length > 0 ? (
           lyrics.map((item, idx) => {
@@ -381,7 +371,6 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
               ? transposeChord(chord, semitonesDiff, notation === "flat")
               : null;
 
-            // จัดการกับบรรทัดใหม่
             if (word === "\n" || word === "\r\n") {
               return <br key={idx} />;
             }
@@ -399,6 +388,60 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
           <div className="no-lyrics">ไม่มีเนื้อเพลงหรือคอร์ด</div>
         )}
       </div>
+
+      {/* Key Selection Modal */}
+      <Modal
+        title="เลือกคีย์เพลง"
+        open={showKeyModal}
+        onCancel={() => setShowKeyModal(false)}
+        footer={null}
+        width={400}
+      >
+        <div style={{ padding: "20px 0" }}>
+          <div style={{ marginBottom: "16px" }}>
+            <label style={{ marginRight: "12px" }}>รูปแบบ:</label>
+            <Select
+              value={notation}
+              onChange={setNotation}
+              style={{ width: 120 }}
+            >
+              <Option value="sharp">♯ Sharp</Option>
+              <Option value="flat">♭ Flat</Option>
+            </Select>
+          </div>
+
+          <div style={{ marginBottom: "16px" }}>
+            <label>เลือกคีย์:</label>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(4, 1fr)",
+              gap: "8px",
+            }}
+          >
+            {getAvailableKeys().map((key) => (
+              <button
+                key={key}
+                onClick={() => handleKeyChange(key)}
+                style={{
+                  padding: "12px",
+                  border:
+                    key === currentKey ? "2px solid #ff4500" : "1px solid #ddd",
+                  background: key === currentKey ? "#fff5f0" : "white",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  fontSize: "16px",
+                  fontWeight: "600",
+                }}
+              >
+                {key}
+              </button>
+            ))}
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

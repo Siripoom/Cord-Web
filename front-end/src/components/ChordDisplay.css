@@ -2,111 +2,389 @@
   width: 100%;
 }
 
+/* Main Controls Container */
 .chord-controls {
-  margin-bottom: 20px;
-  padding: 20px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  border-radius: 12px;
-  border: 1px solid #e0e6ed;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  margin-bottom: 24px;
+  padding: 24px;
+  background: #f8f9fa;
+  border-radius: 16px;
+  border: none;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
-.control-group {
+/* Key Control Section */
+.key-control-section {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.key-section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 20px;
+}
+
+.key-selector-container {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
-.control-label {
+.transpose-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: #2c3e50;
+  color: white;
+  font-size: 24px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.transpose-btn:hover {
+  background: #34495e;
+  transform: scale(1.05);
+}
+
+.transpose-btn:active {
+  transform: scale(0.95);
+}
+
+.current-key-display {
+  min-width: 120px;
+  height: 48px;
+  background: #f4648b;
+  color: white;
+  border: none;
+  border-radius: 24px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.current-key-display:hover {
+  background: #f4648b;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 69, 0, 0.3);
+}
+
+.original-key-info {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 12px;
+}
+
+.reset-btn {
+  background: transparent;
+  border: 2px solid #ddd;
+  color: #666;
+  padding: 8px 24px;
+  border-radius: 24px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.reset-btn:hover {
+  border-color: #f4648b;
+  color: #f4648b;
+}
+
+.reset-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* View Controls */
+.view-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 24px;
+}
+
+.view-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.view-label {
+  font-size: 16px;
   font-weight: 500;
   color: #2c3e50;
-  min-width: fit-content;
-  font-size: 14px;
 }
 
-.key-info {
-  background-color: #e8f4fd;
-  padding: 8px 12px;
+.view-toggle {
+  display: flex;
+  background: #f0f0f0;
   border-radius: 8px;
-  border: 1px solid #bae7ff;
-  font-size: 13px;
+  padding: 4px;
+}
+
+.view-option {
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  color: #666;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.view-option.active {
+  background: white;
+  color: #f4648b;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.font-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.font-size-btn {
+  width: 32px;
+  height: 32px;
+  border: 2px solid #ddd;
+  background: white;
+  color: #666;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.font-size-btn:hover {
+  border-color: #f4648b;
+  color: #f4648b;
+}
+
+.font-reset-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 16px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.font-reset-btn:hover {
+  background: #0056b3;
+}
+
+/* Scroll Controls */
+.scroll-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: center;
+}
+
+.scroll-label {
+  font-size: 16px;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.scroll-toggle {
+  display: flex;
+  background: #f0f0f0;
+  border-radius: 24px;
+  padding: 4px;
+}
+
+.scroll-option {
+  padding: 8px 24px;
+  border: none;
+  background: transparent;
+  color: #666;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+  min-width: 80px;
+}
+
+.scroll-option.active {
+  background: #2c3e50;
+  color: white;
+}
+
+.scroll-option:hover:not(.active) {
+  background: #e0e0e0;
+}
+.speed-controls {
+  margin-top: 20px;
+  padding: 16px;
+  background: rgba(255, 69, 0, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 69, 0, 0.1);
+}
+
+.speed-section {
+  margin-bottom: 16px;
+}
+
+.speed-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #2c3e50;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.speed-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.speed-btn {
+  width: 40px;
+  height: 40px;
+  border: 2px solid #ddd;
+  background: white;
+  color: #666;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.speed-btn:hover {
+  border-color: #f4648b;
+  color: #f4648b;
+}
+
+.speed-btn.active {
+  background: #f4648b;
+  border-color: #f4648b;
+  color: white;
+  transform: scale(1.1);
+}
+
+.scroll-action-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.scroll-control-btn {
+  padding: 10px 20px;
+  border: 2px solid #ddd;
+  background: white;
+  color: #666;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  font-weight: 500;
+  min-width: 120px;
+}
+
+.scroll-control-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.scroll-control-btn.start {
+  border-color: #52c41a;
+  color: #52c41a;
+}
+
+.scroll-control-btn.start:hover {
+  background: #52c41a;
+  color: white;
+}
+
+.scroll-control-btn.stop {
+  border-color: #f4648b;
+  color: #f4648b;
+  background: rgba(255, 77, 79, 0.1);
+}
+
+.scroll-control-btn.stop:hover {
+  background: #f4648b;
+  color: white;
+}
+
+.scroll-control-btn.reset {
+  border-color: #1890ff;
   color: #1890ff;
+}
+
+.scroll-control-btn.reset:hover {
+  background: #1890ff;
+  color: white;
+}
+
+/* Key Info Display */
+.key-info {
+  text-align: center;
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: 1px solid #90caf9;
+  font-size: 14px;
+  color: #1565c0;
+  margin-top: 16px;
 }
 
 .transpose-info {
   font-weight: 600;
-  color: #52c41a;
+  color: #2e7d32;
 }
 
-/* Auto Scroll Controls */
-.auto-scroll-group {
-  background: rgba(24, 144, 255, 0.1);
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid rgba(24, 144, 255, 0.2);
-}
-
-.speed-control {
-  background: rgba(82, 196, 26, 0.1);
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid rgba(82, 196, 26, 0.2);
-}
-
-.speed-slider {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.speed-indicator {
-  font-size: 12px;
-  color: #52c41a;
-  font-weight: 600;
-  min-width: 30px;
-  text-align: center;
-}
-
+/* Chord Display - ไม่มีกรอบ แสดงเนื้อเพลงออกมาเลย */
 .chord-display {
   font-family: "Sarabun", "Kanit", sans-serif;
-  font-size: 18px;
+  font-size: clamp(14px, 2.5vw, 22px);
   line-height: 2.4;
   white-space: pre;
-  padding: 24px;
-  background-color: #fff;
-  border-radius: 12px;
-  border: 1px solid #f0f0f0;
-  min-height: 250px;
-  max-height: 70vh;
-  overflow-y: auto;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  padding: 0; /* ไม่มี padding */
+  margin: 0; /* ไม่มี margin */
+  background-color: transparent; /* พื้นหลังโปร่งใส */
+  border: none; /* ไม่มีกรอบ */
+  border-radius: 0; /* ไม่มีมุมโค้ง */
+  min-height: auto; /* ให้ปรับตามเนื้อหา */
+  max-height: none; /* ไม่จำกัดความสูง */
+  overflow: visible; /* แสดงเนื้อหาทั้งหมด */
+  box-shadow: none; /* ไม่มีเงา */
   word-wrap: break-word;
   overflow-wrap: break-word;
   position: relative;
   scroll-behavior: smooth;
-}
-
-/* Auto scrolling indicator */
-.chord-display.auto-scrolling {
-  border-color: #1890ff;
-  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
-}
-
-.chord-display.auto-scrolling::before {
-  content: "🎵 Auto Scrolling...";
-  position: sticky;
-  top: 0;
-  right: 0;
-  background: linear-gradient(135deg, #1890ff, #52c41a);
-  color: white;
-  padding: 4px 12px;
-  border-radius: 0 0 0 12px;
-  font-size: 12px;
-  font-weight: 600;
-  z-index: 10;
-  float: right;
-  margin-bottom: 16px;
-  animation: pulse 2s infinite;
+  width: 100%;
 }
 
 /* Text Alignment Classes */
@@ -122,8 +400,7 @@
 .chord-display.text-compact {
   text-align: left;
   line-height: 1.8;
-  font-size: 16px;
-  padding: 16px;
+  font-size: clamp(12px, 2vw, 18px); /* ขนาดเล็กกว่าในโหมด compact */
 }
 
 .chord-display.text-compact .chord-word {
@@ -146,15 +423,15 @@
   top: -1.6em;
   left: 0;
   font-weight: 700;
-  font-size: 0.9em;
+  font-size: clamp(0.7em, 1.8vw, 0.9em); /* ปรับขนาดคอร์ดตามหน้าจอ */
   color: #1890ff;
   user-select: none;
   white-space: nowrap;
   z-index: 1;
-  background-color: rgba(24, 144, 255, 0.1);
+  /* background-color: rgba(24, 144, 255, 0.1); */
   padding: 2px 6px;
   border-radius: 4px;
-  border: 1px solid rgba(24, 144, 255, 0.2);
+  /* border: 1px solid rgba(24, 144, 255, 0.2); */
 }
 
 .word-text {
@@ -171,176 +448,255 @@
   font-size: 16px;
 }
 
-/* Enhanced button styles */
-.chord-controls .ant-btn {
-  border-radius: 6px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.chord-controls .ant-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.chord-controls .ant-select {
-  border-radius: 6px;
-}
-
-.chord-controls .ant-radio-button-wrapper {
-  border-radius: 6px;
-  font-weight: 500;
-}
-
-.chord-controls .ant-radio-button-wrapper:first-child {
-  border-radius: 6px 0 0 6px;
-}
-
-.chord-controls .ant-radio-button-wrapper:last-child {
-  border-radius: 0 6px 6px 0;
-}
-
-/* Auto Scroll Button Styles */
-.chord-controls .ant-btn[type="primary"] {
-  background-color: #1890ff;
-  border-color: #1890ff;
-}
-
-.chord-controls .ant-btn[type="primary"]:hover {
-  background-color: #40a9ff;
-  border-color: #40a9ff;
-}
-
-/* Slider Styles */
-.chord-controls .ant-slider {
-  margin: 8px 0;
-}
-
-.chord-controls .ant-slider-track {
-  background-color: #52c41a;
-}
-
-.chord-controls .ant-slider-handle {
-  border-color: #52c41a;
-}
-
-.chord-controls .ant-slider-handle:hover {
-  border-color: #73d13d;
-}
-
-.chord-controls .ant-slider-handle:focus {
-  border-color: #73d13d;
-  box-shadow: 0 0 0 5px rgba(82, 196, 26, 0.2);
-}
-
-/* Scrollbar Styling */
-.chord-display::-webkit-scrollbar {
-  width: 8px;
-}
-
-.chord-display::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.chord-display::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
-  transition: background 0.3s ease;
-}
-
-.chord-display::-webkit-scrollbar-thumb:hover {
-  background: #a1a1a1;
-}
-
-.chord-display.auto-scrolling::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #1890ff, #52c41a);
+/* Auto Scrolling Indicator - แสดงสถานะการเลื่อน */
+.chord-display.auto-scrolling::before {
+  content: "🎵 กำลังเลื่อนอัตโนมัติ... (ความเร็ว " attr(data-speed) ")";
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: linear-gradient(135deg, #ff4500, #ff6500);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  z-index: 1000;
+  animation: pulse 2s infinite;
+  box-shadow: 0 4px 12px rgba(255, 69, 0, 0.3);
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
   .chord-controls {
-    padding: 16px;
+    padding: 20px;
   }
 
-  .chord-controls .ant-space {
-    flex-direction: column;
-    align-items: flex-start;
-    width: 100%;
+  .key-selector-container {
+    gap: 12px;
   }
 
-  .control-group {
-    width: 100%;
-    justify-content: space-between;
-    margin-bottom: 8px;
+  .transpose-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
   }
 
-  .control-label {
-    min-width: 80px;
-  }
-
-  .auto-scroll-group,
-  .speed-control {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .speed-slider {
-    flex: 1;
-    justify-content: space-between;
-  }
-
-  .chord-display {
+  .current-key-display {
+    min-width: 100px;
+    height: 44px;
     font-size: 16px;
-    line-height: 2.2;
-    padding: 16px;
-    max-height: 60vh;
   }
 
-  .chord-display.text-compact {
-    font-size: 14px;
-    line-height: 1.6;
+  .view-controls {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .view-section,
+  .font-controls,
+  .scroll-controls {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .scroll-toggle {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .scroll-option {
+    flex: 1;
+    text-align: center;
+  }
+
+  /* Speed Controls Mobile */
+  .speed-controls {
+    margin-top: 16px;
     padding: 12px;
   }
 
-  .chord-text {
-    font-size: 0.85em;
-    top: -1.4em;
+  .speed-buttons {
+    gap: 6px;
   }
 
-  .key-info {
+  .speed-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+
+  .scroll-action-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .scroll-control-btn {
     width: 100%;
-    text-align: center;
-    margin-top: 8px;
+    padding: 8px 16px;
+    font-size: 13px;
+    min-width: auto;
+  }
+
+  .chord-display {
+    font-size: clamp(16px, 3vw, 20px);
+    line-height: 2.2;
+    /* ไม่มีการจำกัดความสูงในมือถือ */
+  }
+
+  .chord-display.text-compact {
+    font-size: clamp(14px, 2.5vw, 16px);
+    line-height: 1.8;
+  }
+
+  .chord-text {
+    font-size: clamp(0.75em, 2vw, 0.85em);
+  }
+
+  .chord-display.auto-scrolling::before {
+    top: 10px;
+    right: 10px;
+    font-size: 11px;
+    padding: 4px 12px;
   }
 }
 
 @media (max-width: 480px) {
   .chord-controls {
-    padding: 12px;
+    padding: 16px;
   }
 
-  .control-group {
-    flex-direction: column;
-    align-items: flex-start;
+  .key-section-title {
+    font-size: 16px;
+  }
+
+  .key-selector-container {
+    gap: 8px;
+  }
+
+  .transpose-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+
+  .current-key-display {
+    min-width: 80px;
+    height: 40px;
+    font-size: 14px;
+  }
+
+  .view-label,
+  .scroll-label {
+    font-size: 14px;
+  }
+
+  .view-option,
+  .scroll-option {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .speed-controls {
+    margin-top: 12px;
+    padding: 10px;
+  }
+
+  .speed-buttons {
     gap: 4px;
   }
 
+  .speed-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+  }
+
+  .scroll-action-buttons {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .scroll-control-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+    min-width: auto;
+  }
+
   .chord-display {
-    font-size: 14px;
+    font-size: clamp(14px, 4vw, 18px);
     line-height: 2;
-    padding: 12px;
-    max-height: 50vh;
+    /* ไม่มีการจำกัดความสูงในมือถือ */
+  }
+
+  .chord-display.text-compact {
+    font-size: clamp(12px, 3.5vw, 15px);
+    line-height: 1.6;
+  }
+
+  .chord-text {
+    font-size: clamp(0.7em, 2.5vw, 0.8em);
   }
 
   .chord-display.auto-scrolling::before {
-    font-size: 10px;
-    padding: 2px 8px;
+    top: 10px;
+    right: 10px;
+    font-size: clamp(9px, 2vw, 11px);
+    padding: 3px 10px;
+  }
+}
+
+/* สำหรับหน้าจอขนาดใหญ่มาก */
+@media (min-width: 1200px) {
+  .chord-display {
+    font-size: clamp(18px, 1.8vw, 24px);
+    /* ไม่จำกัดความสูง */
   }
 
-  .speed-slider .ant-slider {
-    width: 80px;
+  .chord-display.text-compact {
+    font-size: clamp(16px, 1.5vw, 20px);
   }
+
+  .chord-text {
+    font-size: clamp(0.8em, 1.2vw, 0.95em);
+  }
+}
+
+/* สำหรับหน้าจอขนาดเล็กมาก */
+@media (max-width: 320px) {
+  .chord-display {
+    font-size: clamp(12px, 5vw, 16px);
+    line-height: 1.8;
+    /* ไม่จำกัดความสูง */
+  }
+
+  .chord-display.text-compact {
+    font-size: clamp(10px, 4.5vw, 14px);
+    line-height: 1.5;
+  }
+
+  .chord-text {
+    font-size: clamp(0.65em, 3vw, 0.75em);
+    padding: 1px 4px;
+  }
+
+  .chord-display.auto-scrolling::before {
+    top: 5px;
+    right: 5px;
+    font-size: 9px;
+    padding: 2px 8px;
+  }
+}
+
+/* Scrollbar Styling - ซ่อนเพราะไม่ต้องเลื่อน */
+.chord-display::-webkit-scrollbar {
+  display: none; /* ซ่อน scrollbar */
+}
+
+.chord-display {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 
 /* Print styles */
@@ -350,23 +706,26 @@
   }
 
   .chord-display {
-    font-size: 14pt;
+    font-size: clamp(12pt, 2vw, 16pt) !important;
     line-height: 2;
     border: none;
     box-shadow: none;
     background: transparent;
     max-height: none;
     overflow: visible;
+    padding: 0;
+    margin: 0;
   }
 
   .chord-display.text-compact {
-    font-size: 12pt;
+    font-size: clamp(10pt, 1.5vw, 14pt) !important;
     line-height: 1.6;
+    padding: 0;
   }
 
   .chord-text {
     color: #000 !important;
-    font-size: 0.8em;
+    font-size: clamp(0.7em, 1.2vw, 0.8em) !important;
     background: transparent !important;
     border: none !important;
   }
@@ -384,238 +743,5 @@
   }
   50% {
     opacity: 0.7;
-  }
-}
-
-/* Smooth scrolling animation */
-@keyframes smoothScroll {
-  from {
-    scroll-behavior: smooth;
-  }
-  to {
-    scroll-behavior: smooth;
-  }
-}
-.chord-display-container {
-  width: 100%;
-}
-
-.chord-controls {
-  margin-bottom: 20px;
-  padding: 20px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  border-radius: 12px;
-  border: 1px solid #e0e6ed;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
-.control-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.control-label {
-  font-weight: 500;
-  color: #2c3e50;
-  min-width: fit-content;
-  font-size: 14px;
-}
-
-.key-info {
-  background-color: #e8f4fd;
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid #bae7ff;
-  font-size: 13px;
-  color: #1890ff;
-}
-
-.transpose-info {
-  font-weight: 600;
-  color: #52c41a;
-}
-
-.chord-display {
-  font-family: "Sarabun", "Kanit", sans-serif;
-  font-size: 18px;
-  line-height: 2.4;
-  white-space: pre;
-  padding: 24px;
-  background-color: #fff;
-  border-radius: 12px;
-  border: 1px solid #f0f0f0;
-  min-height: 250px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-}
-
-/* Text Alignment Classes */
-.chord-display.text-left {
-  text-align: left;
-}
-
-.chord-display.text-center {
-  text-align: center;
-  white-space: pre-line; /* Allow line breaks but center align */
-}
-
-.chord-display.text-compact {
-  text-align: left;
-  line-height: 1.8; /* Tighter line spacing */
-  font-size: 16px; /* Smaller font */
-  padding: 16px; /* Less padding */
-}
-
-.chord-display.text-compact .chord-word {
-  margin-right: 2px; /* Tighter spacing between words */
-}
-
-.chord-display.text-compact .chord-text {
-  font-size: 0.85em; /* Smaller chord text in compact mode */
-  top: -1.4em; /* Adjust position for smaller line height */
-}
-
-.chord-word {
-  display: inline;
-  position: relative;
-  vertical-align: bottom;
-}
-
-.chord-text {
-  position: absolute;
-  top: -1.7em;
-  left: 0;
-  font-weight: 700;
-  font-size: 0.9em;
-  color: #1890ff;
-  user-select: none;
-  white-space: nowrap;
-  z-index: 1;
-  background-color: rgba(255, 255, 255, 0);
-  padding: 2px 6px;
-  border-radius: 4px;
-  border: 1px solid rgba(24, 143, 255, 0);
-}
-
-.word-text {
-  position: relative;
-  z-index: 0;
-  font-weight: 400;
-}
-
-.no-lyrics {
-  text-align: center;
-  color: #999;
-  font-style: italic;
-  padding: 60px 20px;
-  font-size: 16px;
-}
-
-/* Enhanced button styles */
-.chord-controls .ant-btn {
-  border-radius: 6px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.chord-controls .ant-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.chord-controls .ant-select {
-  border-radius: 6px;
-}
-
-.chord-controls .ant-radio-button-wrapper {
-  border-radius: 6px;
-  font-weight: 500;
-}
-
-.chord-controls .ant-radio-button-wrapper:first-child {
-  border-radius: 6px 0 0 6px;
-}
-
-.chord-controls .ant-radio-button-wrapper:last-child {
-  border-radius: 0 6px 6px 0;
-}
-
-/* Alignment button active states */
-.chord-controls .ant-btn[type="primary"] {
-  background-color: #1890ff;
-  border-color: #1890ff;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .chord-controls {
-    padding: 16px;
-  }
-
-  .chord-controls .ant-space {
-    flex-direction: column;
-    align-items: flex-start;
-    width: 100%;
-  }
-
-  .control-group {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .control-label {
-    min-width: 80px;
-  }
-
-  .chord-display {
-    font-size: 16px;
-    line-height: 2.2;
-    padding: 16px;
-  }
-
-  .chord-display.text-compact {
-    font-size: 14px;
-    line-height: 1.6;
-    padding: 12px;
-  }
-
-  .chord-text {
-    font-size: 0.85em;
-    top: -1.4em;
-  }
-
-  .key-info {
-    width: 100%;
-    text-align: center;
-    margin-top: 8px;
-  }
-}
-
-/* Print styles */
-@media print {
-  .chord-controls {
-    display: none;
-  }
-
-  .chord-display {
-    font-size: 14pt;
-    line-height: 2;
-    border: none;
-    box-shadow: none;
-    background: transparent;
-  }
-
-  .chord-display.text-compact {
-    font-size: 12pt;
-    line-height: 1.6;
-  }
-
-  .chord-text {
-    color: #000 !important;
-    font-size: 0.8em;
-    background: transparent !important;
-    border: none !important;
   }
 }
