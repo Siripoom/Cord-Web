@@ -1,44 +1,55 @@
 import prisma from "../config/db.js";
 import { validationResult } from "express-validator";
-
 /**
- * Helper function to parse lyrics raw string to array of {word, chord}
- * Format: "[C]Hello[G]world[Am]song"
- * Returns: [{word: "Hello", chord: "C"}, {word: "world", chord: "G"}, {word: "song", chord: "Am"}]
- */
-/**
- * Helper function to parse lyrics raw string to array of {word, chord}
- * Format: "Intro / Am / Am / [C]Hello[G]world[Am]song"
- * Returns: [{word: "Intro / Am / Am / ", chord: null}, {word: "Hello", chord: "C"}, {word: "world", chord: "G"}, {word: "song", chord: "Am"}]
+ * Helper function to parse lyrics raw string to array of {word, chord, chordType}
+ * Format:
+ * - "[C]Hello[G]world" = แสดงคอร์ดด้านบน
+ * - "{Am}inline{F}chord" = แสดงคอร์ดในบรรทัดเดียวกัน
+ * - Mixed: "[C]Hello {Am}world [G]song"
+ *
+ * chordType: "above" | "inline" | null
  */
 function parseLyricsRaw(raw) {
   if (!raw || typeof raw !== "string") return [];
 
   const result = [];
 
-  // Check if there are any chords in the text
-  const hasChords = /\[[^\]]*\]/.test(raw);
+  // Check if there are any chords in the text (both [] and {})
+  const hasChords = /\[[^\]]*\]|\{[^}]*\}/.test(raw);
 
   if (!hasChords) {
     // No chords found, treat entire text as one word
     result.push({
       word: raw,
       chord: null,
+      chordType: null,
     });
     return result;
   }
 
-  // Extract all chords and their positions
+  // Extract all chords and their positions (both [] and {})
   const chords = [];
-  const chordRegex = /\[([^\]]*)\]/g;
+  const chordRegex = /(\[([^\]]*)\])|(\{([^}]*)\})/g;
   let match;
 
   while ((match = chordRegex.exec(raw)) !== null) {
-    chords.push({
-      chord: match[1],
-      position: match.index,
-      fullMatch: match[0],
-    });
+    if (match[1]) {
+      // Square bracket chord [C]
+      chords.push({
+        chord: match[2],
+        chordType: "above",
+        position: match.index,
+        fullMatch: match[1],
+      });
+    } else if (match[3]) {
+      // Curly bracket chord {C}
+      chords.push({
+        chord: match[4],
+        chordType: "inline",
+        position: match.index,
+        fullMatch: match[3],
+      });
+    }
   }
 
   let currentPos = 0;
@@ -53,6 +64,7 @@ function parseLyricsRaw(raw) {
         result.push({
           word: textBefore,
           chord: null,
+          chordType: null,
         });
       }
     }
@@ -74,6 +86,7 @@ function parseLyricsRaw(raw) {
     result.push({
       word: textAfter,
       chord: chordInfo.chord,
+      chordType: chordInfo.chordType,
     });
 
     // Update current position for next iteration
@@ -136,6 +149,7 @@ export const getAllSongs = async (req, res) => {
             word: true,
             chord: true,
             wordOrder: true,
+            chordType: true, // Include chordType
           },
         },
         _count: {
@@ -196,6 +210,7 @@ export const getSongById = async (req, res) => {
             word: true,
             chord: true,
             wordOrder: true,
+            chordType: true, // Include chordType
           },
         },
       },
@@ -270,6 +285,7 @@ export const createSong = async (req, res) => {
             wordOrder: index,
             word: item.word,
             chord: item.chord,
+            chordType: item.chordType, // เพิ่ม chordType
           }));
 
           await tx.lyric.createMany({
@@ -383,6 +399,7 @@ export const updateSong = async (req, res) => {
               wordOrder: index,
               word: item.word,
               chord: item.chord,
+              chordType: item.chordType, // เพิ่ม chordType
             }));
 
             await tx.lyric.createMany({

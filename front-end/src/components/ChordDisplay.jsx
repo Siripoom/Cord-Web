@@ -60,7 +60,7 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
   const [currentKey, setCurrentKey] = useState(defaultKey);
   const [notation, setNotation] = useState("sharp");
   const [textAlign, setTextAlign] = useState("left");
-  const [scrollMode, setScrollMode] = useState("step"); // "step" หรือ "auto"
+  const [scrollMode, setScrollMode] = useState("step");
   const [isAutoScrolling, setIsAutoScrolling] = useState(false);
   const [scrollSpeed, setScrollSpeed] = useState(3);
   const [showKeyModal, setShowKeyModal] = useState(false);
@@ -80,10 +80,8 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
           document.documentElement.scrollHeight - window.innerHeight;
 
         if (currentScroll >= maxScroll) {
-          // Reached bottom, stop auto scroll
           setIsAutoScrolling(false);
         } else {
-          // Scroll the entire page
           window.scrollBy({
             top: pixelsPerScroll,
             behavior: "smooth",
@@ -166,7 +164,6 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
       setIsAutoScrolling(true);
     } else {
       setIsAutoScrolling(false);
-      // Scroll to top when switching to step mode
       window.scrollTo({
         top: 0,
         behavior: "smooth",
@@ -242,8 +239,6 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
                 +
               </button>
             </div>
-
-            {/* <div className="original-key-info">Original Key</div> */}
 
             <button
               className="reset-btn"
@@ -366,7 +361,7 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
       >
         {lyrics && lyrics.length > 0 ? (
           lyrics.map((item, idx) => {
-            const { word, chord } = item;
+            const { word, chord, chordType } = item;
             const transposedChord = chord
               ? transposeChord(chord, semitonesDiff, notation === "flat")
               : null;
@@ -375,14 +370,31 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
               return <br key={idx} />;
             }
 
-            return (
-              <span key={idx} className="chord-word">
-                {transposedChord && (
+            // Handle different chord types
+            if (chordType === "inline" && transposedChord) {
+              // Inline chord - แสดงในบรรทัดเดียวกัน
+              return (
+                <span key={idx} className="chord-word inline">
+                  <span className="inline-chord">({transposedChord})</span>
+                  <span className="word-text">{word}</span>
+                </span>
+              );
+            } else if (chordType === "above" && transposedChord) {
+              // Above chord - แสดงด้านบน (แบบเดิม)
+              return (
+                <span key={idx} className="chord-word above">
                   <span className="chord-text">{transposedChord}</span>
-                )}
-                <span className="word-text">{word}</span>
-              </span>
-            );
+                  <span className="word-text">{word}</span>
+                </span>
+              );
+            } else {
+              // No chord - เฉพาะข้อความ
+              return (
+                <span key={idx} className="chord-word">
+                  <span className="word-text">{word}</span>
+                </span>
+              );
+            }
           })
         ) : (
           <div className="no-lyrics">ไม่มีเนื้อเพลงหรือคอร์ด</div>
@@ -451,6 +463,7 @@ ChordDisplay.propTypes = {
     PropTypes.shape({
       word: PropTypes.string.isRequired,
       chord: PropTypes.string,
+      chordType: PropTypes.string, // เพิ่ม chordType
       wordOrder: PropTypes.number,
     })
   ).isRequired,

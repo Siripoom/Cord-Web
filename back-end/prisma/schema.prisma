@@ -39,6 +39,7 @@ model Lyric {
   wordOrder Int
   word      String
   chord     String?
+  chordType String?  // "above", "inline", or null
 }
 
 model Category {

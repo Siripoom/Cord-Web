@@ -117,6 +117,7 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
     fetchSongs(1, pagination.pageSize);
   };
 
+  // ในส่วน showSongModal function ให้แก้ไขการ convert lyrics array กลับเป็น raw format
   const showSongModal = async (song = null) => {
     if (song) {
       try {
@@ -126,17 +127,26 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
         const response = await getSongById(song.id);
         if (response.success) {
           const fullSong = response.data;
-          console.log("Full song data for editing:", fullSong); // Debug log
+          console.log("Full song data for editing:", fullSong);
 
-          // Convert lyrics array back to raw format - แก้ไขส่วนนี้
+          // Convert lyrics array back to raw format - รองรับทั้ง 2 รูปแบบ
           let lyricsRaw = "";
           if (fullSong.lyrics && Array.isArray(fullSong.lyrics)) {
             lyricsRaw = fullSong.lyrics
               .map((item) => {
-                const chordPart = item.chord ? `[${item.chord}]` : "";
-                return `${chordPart}${item.word}`;
+                if (item.chord) {
+                  // ตรวจสอบ chordType และใช้ bracket ที่เหมาะสม
+                  if (item.chordType === "inline") {
+                    return `{${item.chord}}${item.word}`;
+                  } else {
+                    // default หรือ "above"
+                    return `[${item.chord}]${item.word}`;
+                  }
+                } else {
+                  return item.word;
+                }
               })
-              .join(""); // เปลี่ยนจาก .join(" ") เป็น .join("") เพื่อไม่ให้เพิ่มช่องว่าง
+              .join("");
           }
 
           form.setFieldsValue({
