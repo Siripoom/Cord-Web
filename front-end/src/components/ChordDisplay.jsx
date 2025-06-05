@@ -64,6 +64,7 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
   const [isAutoScrolling, setIsAutoScrolling] = useState(false);
   const [scrollSpeed, setScrollSpeed] = useState(3);
   const [showKeyModal, setShowKeyModal] = useState(false);
+  const [showChords, setShowChords] = useState(true); // เพิ่ม state สำหรับแสดง/ซ่อนคอร์ด
   const intervalRef = useRef(null);
   const displayRef = useRef(null);
 
@@ -195,16 +196,27 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
     return notation === "flat" ? FLAT_KEYS : SHARP_KEYS;
   };
 
-  // Get CSS classes for text alignment
+  // Get CSS classes for text alignment and chord visibility
   const getAlignmentClass = () => {
+    let classes = [];
+
     switch (textAlign) {
       case "center":
-        return "text-center";
+        classes.push("text-center");
+        break;
       case "compact":
-        return "text-compact";
+        classes.push("text-compact");
+        break;
       default:
-        return "text-left";
+        classes.push("text-left");
     }
+
+    // เพิ่ม class เมื่อซ่อนคอร์ด
+    if (!showChords) {
+      classes.push("lyrics-only");
+    }
+
+    return classes.join(" ");
   };
 
   return (
@@ -269,6 +281,25 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
                   onClick={() => handleViewChange("center")}
                 >
                   ⊞ Vertical
+                </button>
+              </div>
+            </div>
+
+            {/* Chord Visibility Toggle */}
+            <div className="view-section">
+              <span className="view-label">แสดงคอร์ด :</span>
+              <div className="view-toggle">
+                <button
+                  className={`view-option ${showChords ? "active" : ""}`}
+                  onClick={() => setShowChords(true)}
+                >
+                  🎵 เนื้อ+คอร์ด
+                </button>
+                <button
+                  className={`view-option ${!showChords ? "active" : ""}`}
+                  onClick={() => setShowChords(false)}
+                >
+                  📝 เฉพาะเนื้อ
                 </button>
               </div>
             </div>
@@ -371,16 +402,16 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
             }
 
             // Handle different chord types
-            if (chordType === "inline" && transposedChord) {
-              // Inline chord - แสดงในบรรทัดเดียวกัน
+            if (showChords && chordType === "inline" && transposedChord) {
+              // Inline chord - แสดงในบรรทัดเดียวกัน (เมื่อ showChords = true)
               return (
                 <span key={idx} className="chord-word inline">
                   <span className="inline-chord">({transposedChord})</span>
                   <span className="word-text">{word}</span>
                 </span>
               );
-            } else if (chordType === "above" && transposedChord) {
-              // Above chord - แสดงด้านบน (แบบเดิม)
+            } else if (showChords && chordType === "above" && transposedChord) {
+              // Above chord - แสดงด้านบน (เมื่อ showChords = true)
               return (
                 <span key={idx} className="chord-word above">
                   <span className="chord-text">{transposedChord}</span>
@@ -388,7 +419,7 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
                 </span>
               );
             } else {
-              // No chord - เฉพาะข้อความ
+              // No chord หรือ showChords = false - เฉพาะข้อความ
               return (
                 <span key={idx} className="chord-word">
                   <span className="word-text">{word}</span>
