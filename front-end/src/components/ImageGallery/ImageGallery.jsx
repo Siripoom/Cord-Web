@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from "react";
+// อัพเดต front-end/src/components/ImageGallery/ImageGallery.jsx
+// เพิ่ม import และปรับปรุงการแสดงผล
+
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Card,
-  Image,
   Row,
   Col,
   Spin,
@@ -12,6 +14,7 @@ import {
   message,
   Popconfirm,
   Tooltip,
+  Alert,
 } from "antd";
 import {
   PlusOutlined,
@@ -19,9 +22,11 @@ import {
   EyeOutlined,
   UploadOutlined,
   DragOutlined,
+  ReloadOutlined,
+  WarningOutlined,
 } from "@ant-design/icons";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import PropTypes from "prop-types";
+import ImageViewer from "../ImageViewer/ImageViewer"; // เพิ่ม import
 import "./ImageGallery.css";
 
 const ImageGallery = ({
@@ -35,9 +40,70 @@ const ImageGallery = ({
   const [uploading, setUploading] = useState(false);
   const [uploadModalVisible, setUploadModalVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [imageErrors, setImageErrors] = useState({});
+  const [draggedIndex, setDraggedIndex] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
 
-  const [previewImage, setPreviewImage] = useState("");
-  const [previewVisible, setPreviewVisible] = useState(false);
+  // เพิ่ม state สำหรับ Image Viewer
+  const [viewerVisible, setViewerVisible] = useState(false);
+  const [currentViewerIndex, setCurrentViewerIndex] = useState(0);
+
+  // ฟังก์ชันสำหรับทดสอบการโหลดรูปภาพ
+  const testImageLoading = useCallback((imageData) => {
+    if (typeof window === "undefined") return;
+
+    const testImg = new window.Image();
+    testImg.crossOrigin = "anonymous";
+
+    testImg.onload = () => {
+      console.log(`✅ Image loaded successfully:`, {
+        id: imageData.id,
+        filename: imageData.filename,
+        url: imageData.url,
+        dimensions: `${testImg.naturalWidth}x${testImg.naturalHeight}`,
+      });
+
+      setImageErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[imageData.id];
+        return newErrors;
+      });
+    };
+
+    testImg.onerror = (error) => {
+      console.error(`❌ Image failed to load:`, {
+        id: imageData.id,
+        filename: imageData.filename,
+        url: imageData.url,
+        error: error.type || "load error",
+      });
+
+      setImageErrors((prev) => ({
+        ...prev,
+        [imageData.id]: true,
+      }));
+    };
+
+    const timeoutId = setTimeout(() => {
+      console.warn(`⏰ Image load timeout:`, imageData.url);
+      setImageErrors((prev) => ({
+        ...prev,
+        [imageData.id]: true,
+      }));
+    }, 10000);
+
+    testImg.onload = () => {
+      clearTimeout(timeoutId);
+      console.log(`✅ Image loaded successfully:`, imageData.url);
+      setImageErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[imageData.id];
+        return newErrors;
+      });
+    };
+
+    testImg.src = imageData.url;
+  }, []);
 
   useEffect(() => {
     if (songId) {
@@ -54,60 +120,28 @@ const ImageGallery = ({
       const data = await response.json();
 
       if (data.success) {
-        console.log("Fetched images:", data.data);
+        console.log("📷 Fetched images:", data.data);
         setImages(data.data);
+        setImageErrors({});
 
-        // Debug: ทดสอบ URL แต่ละรูป (เฉพาะ browser environment)
-        if (typeof window !== "undefined") {
-          data.data.forEach((image, index) => {
-            console.log(`Image ${index + 1}:`, {
-              id: image.id,
-              filename: image.filename,
-              url: image.url,
-              size: image.size,
-            });
-
-            // ทดสอบหลาย URL format สำหรับ Backblaze
-            const fileName = image.url.split("/").pop();
-            const testUrls = [
-              image.url, // URL เดิม
-              `https://f005.backblazeb2.com/file/img-song/song-images/${fileName}`,
-              `https://f004.backblazeb2.com/file/img-song/song-images/${fileName}`,
-              `https://f000.backblazeb2.com/file/img-song/song-images/${fileName}`,
-              `https://img-song.f005.backblazeb2.com/song-images/${fileName}`,
-              `https://f005.backblazeb2.com/b2api/v1/b2_download_file_by_name?bucketName=img-song&fileName=song-images/${fileName}`,
-            ];
-
-            console.log(
-              `Testing ${testUrls.length} URL formats for image ${index + 1}:`
-            );
-
-            testUrls.forEach((testUrl, urlIndex) => {
-              const testImg = new window.Image();
-              testImg.onload = () => {
-                console.log(
-                  `✅ URL Format ${urlIndex + 1} works for image ${index + 1}:`,
-                  testUrl
-                );
-              };
-              testImg.onerror = () => {
-                console.log(
-                  `❌ URL Format ${urlIndex + 1} failed for image ${
-                    index + 1
-                  }:`,
-                  testUrl
-                );
-              };
-              testImg.src = testUrl;
-            });
+        data.data.forEach((image, index) => {
+          console.log(`🔍 Testing image ${index + 1}:`, {
+            id: image.id,
+            filename: image.filename,
+            url: image.url,
+            size: `${(image.size / 1024).toFixed(1)} KB`,
           });
-        }
+
+          setTimeout(() => {
+            testImageLoading(image);
+          }, index * 500);
+        });
       } else {
-        console.error("Failed to fetch images:", data.message);
+        console.error("❌ Failed to fetch images:", data.message);
         message.error(data.message || "ไม่สามารถโหลดรูปภาพได้");
       }
     } catch (error) {
-      console.error("Error fetching images:", error);
+      console.error("💥 Error fetching images:", error);
       message.error("เกิดข้อผิดพลาดในการโหลดรูปภาพ");
     } finally {
       setLoading(false);
@@ -115,7 +149,17 @@ const ImageGallery = ({
   };
 
   const handleUpload = async (file) => {
-    // Check current image count
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      message.error("รองรับเฉพาะไฟล์ JPG, PNG, WebP เท่านั้น");
+      return false;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      message.error("ขนาดไฟล์ต้องไม่เกิน 5MB");
+      return false;
+    }
+
     if (images.length >= 6) {
       message.error("สามารถอัพโหลดได้สูงสุด 6 รูปต่อเพลง");
       return false;
@@ -142,8 +186,11 @@ const ImageGallery = ({
       const data = await response.json();
 
       if (data.success) {
-        message.success("อัพโหลดรูปภาพสำเร็จ");
-        fetchImages(); // Refresh images
+        message.success(`อัพโหลด "${file.name}" สำเร็จ`);
+
+        setTimeout(() => {
+          fetchImages();
+        }, 1500);
 
         if (data.data.failed && data.data.failed.length > 0) {
           data.data.failed.forEach((failed) => {
@@ -156,13 +203,13 @@ const ImageGallery = ({
         message.error(data.message || "ไม่สามารถอัพโหลดรูปภาพได้");
       }
     } catch (error) {
-      console.error("Upload error:", error);
+      console.error("💥 Upload error:", error);
       message.error("เกิดข้อผิดพลาดในการอัพโหลด");
     } finally {
       setUploading(false);
     }
 
-    return false; // Prevent auto upload
+    return false;
   };
 
   const handleDelete = async (imageId) => {
@@ -182,28 +229,72 @@ const ImageGallery = ({
 
       if (data.success) {
         message.success("ลบรูปภาพสำเร็จ");
-        fetchImages(); // Refresh images
+        fetchImages();
       } else {
         message.error(data.message || "ไม่สามารถลบรูปภาพได้");
       }
     } catch (error) {
-      console.error("Delete error:", error);
+      console.error("💥 Delete error:", error);
       message.error("เกิดข้อผิดพลาดในการลบรูปภาพ");
     }
   };
 
-  const handleReorder = async (result) => {
-    if (!result.destination) return;
+  // HTML5 Drag & Drop handlers
+  const handleDragStart = (e, index) => {
+    if (!showControls) return;
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/html", e.target.outerHTML);
+    e.target.style.opacity = "0.5";
+  };
 
-    const items = Array.from(images);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
+  const handleDragEnd = (e) => {
+    e.target.style.opacity = "1";
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
 
-    // Update local state immediately for better UX
-    setImages(items);
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDragEnter = (e, index) => {
+    e.preventDefault();
+    setDragOverIndex(index);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX;
+    const y = e.clientY;
+
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+      setDragOverIndex(null);
+    }
+  };
+
+  const handleDrop = async (e, dropIndex) => {
+    e.preventDefault();
+
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    const newImages = [...images];
+    const draggedImage = newImages[draggedIndex];
+    newImages.splice(draggedIndex, 1);
+    newImages.splice(dropIndex, 0, draggedImage);
+
+    setImages(newImages);
+    setDraggedIndex(null);
+    setDragOverIndex(null);
 
     try {
-      const imageIds = items.map((img) => img.id);
+      const imageIds = newImages.map((img) => img.id);
       const token = localStorage.getItem("token");
 
       const response = await fetch(
@@ -222,16 +313,65 @@ const ImageGallery = ({
 
       if (data.success) {
         message.success("เรียงลำดับรูปภาพสำเร็จ");
-        setImages(data.data); // Update with server response
+        setImages(data.data);
       } else {
         message.error(data.message || "ไม่สามารถเรียงลำดับรูปภาพได้");
-        fetchImages(); // Revert to original order
+        fetchImages();
       }
     } catch (error) {
-      console.error("Reorder error:", error);
+      console.error("💥 Reorder error:", error);
       message.error("เกิดข้อผิดพลาดในการเรียงลำดับ");
-      fetchImages(); // Revert to original order
+      fetchImages();
     }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchImages();
+    setRefreshing(false);
+    message.success("รีเฟรชรูปภาพแล้ว");
+  };
+
+  const getWorkingImageUrl = (originalUrl) => {
+    if (!originalUrl) return null;
+
+    const timestamp = Date.now();
+    if (originalUrl.includes("?")) {
+      return `${originalUrl}&t=${timestamp}&cors=true`;
+    } else {
+      return `${originalUrl}?t=${timestamp}&cors=true`;
+    }
+  };
+
+  const retryImageLoad = (imageId) => {
+    const image = images.find((img) => img.id === imageId);
+    if (image) {
+      setImageErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[imageId];
+        return newErrors;
+      });
+
+      setTimeout(() => {
+        testImageLoading(image);
+      }, 500);
+    }
+  };
+
+  // ฟังก์ชันสำหรับเปิด Image Viewer
+  const openImageViewer = (index) => {
+    setCurrentViewerIndex(index);
+    setViewerVisible(true);
+  };
+
+  // ฟังก์ชันสำหรับปิด Image Viewer
+  const closeImageViewer = () => {
+    setViewerVisible(false);
+  };
+
+  // ฟังก์ชันสำหรับเปลี่ยนภาพใน Viewer
+  const handleViewerIndexChange = (newIndex) => {
+    setCurrentViewerIndex(newIndex);
   };
 
   const uploadProps = {
@@ -241,6 +381,7 @@ const ImageGallery = ({
     beforeUpload: handleUpload,
     showUploadList: false,
     accept: "image/*",
+    disabled: uploading || images.length >= 6,
   };
 
   if (loading) {
@@ -259,121 +400,199 @@ const ImageGallery = ({
       title={title}
       className="image-gallery-card"
       extra={
-        showUpload && (
+        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
           <Button
-            type="primary"
-            icon={<UploadOutlined />}
-            onClick={() => setUploadModalVisible(true)}
-            disabled={images.length >= 6}
-          >
-            อัพโหลดรูป ({images.length}/6)
-          </Button>
-        )
+            type="text"
+            icon={<ReloadOutlined />}
+            onClick={handleRefresh}
+            loading={refreshing}
+            title="รีเฟรชรูปภาพ"
+            size="small"
+          />
+          {showUpload && (
+            <Button
+              type="primary"
+              icon={<UploadOutlined />}
+              onClick={() => setUploadModalVisible(true)}
+              disabled={images.length >= 6 || uploading}
+              loading={uploading}
+            >
+              อัพโหลดรูป ({images.length}/6)
+            </Button>
+          )}
+        </div>
       }
     >
+      {Object.keys(imageErrors).length > 0 && (
+        <Alert
+          message="บางรูปภาพไม่สามารถแสดงผลได้"
+          description={`พบ ${
+            Object.keys(imageErrors).length
+          } รูปที่มีปัญหา กรุณาลองรีเฟรชหรือติดต่อผู้ดูแลระบบ`}
+          type="warning"
+          showIcon
+          icon={<WarningOutlined />}
+          style={{ marginBottom: 16 }}
+          action={
+            <Button size="small" onClick={handleRefresh} loading={refreshing}>
+              รีเฟรช
+            </Button>
+          }
+          closable
+          onClose={() => setImageErrors({})}
+        />
+      )}
+
       {images.length === 0 ? (
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
-          description="ยังไม่มีรูปภาพคอร์ด"
+          description={
+            <div>
+              <p>ยังไม่มีรูปภาพคอร์ด</p>
+              {showUpload && (
+                <Button
+                  type="primary"
+                  icon={<UploadOutlined />}
+                  onClick={() => setUploadModalVisible(true)}
+                >
+                  อัพโหลดรูปแรก
+                </Button>
+              )}
+            </div>
+          }
           className="empty-images"
         />
       ) : (
-        <DragDropContext onDragEnd={handleReorder}>
-          <Droppable droppableId="images" direction="horizontal">
-            {(provided) => (
-              <div
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-                className="images-grid"
-              >
-                <Row gutter={[16, 16]}>
-                  {images.map((image, index) => (
-                    <Draggable
-                      key={image.id}
-                      draggableId={image.id}
-                      index={index}
-                      isDragDisabled={!showControls}
-                    >
-                      {(provided, snapshot) => (
-                        <Col
-                          xs={24}
-                          sm={12}
-                          md={8}
-                          lg={6}
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
+        <div className="images-grid">
+          <Row gutter={[16, 16]}>
+            {images.map((image, index) => (
+              <Col xs={24} sm={12} md={8} lg={6} key={image.id}>
+                <div
+                  className={`image-item ${
+                    draggedIndex === index ? "dragging" : ""
+                  } ${dragOverIndex === index ? "drag-over" : ""} ${
+                    imageErrors[image.id] ? "image-error" : ""
+                  }`}
+                  draggable={showControls}
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragEnd={handleDragEnd}
+                  onDragOver={handleDragOver}
+                  onDragEnter={(e) => handleDragEnter(e, index)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, index)}
+                >
+                  <div className="image-wrapper">
+                    {imageErrors[image.id] ? (
+                      <div className="image-error-placeholder">
+                        <WarningOutlined
+                          style={{ fontSize: 24, color: "#faad14" }}
+                        />
+                        <p>ไม่สามารถโหลดรูปได้</p>
+                        <p style={{ fontSize: "11px", color: "#999" }}>
+                          {image.filename}
+                        </p>
+                        <Button
+                          size="small"
+                          onClick={() => retryImageLoad(image.id)}
                         >
-                          <div
-                            className={`image-item ${
-                              snapshot.isDragging ? "dragging" : ""
-                            }`}
-                          >
-                            <div className="image-wrapper">
-                              <Image
-                                src={image.url}
-                                alt={image.filename}
-                                className="gallery-image"
-                                preview={{
-                                  mask: (
-                                    <div className="preview-mask">
-                                      <EyeOutlined />
-                                      <span>ดูภาพ</span>
-                                    </div>
-                                  ),
-                                }}
-                                loading="lazy"
-                              />
-
-                              {showControls && (
-                                <div className="image-controls">
-                                  <div
-                                    {...provided.dragHandleProps}
-                                    className="drag-handle"
-                                  >
-                                    <DragOutlined />
-                                  </div>
-
-                                  <Popconfirm
-                                    title="ยืนยันการลบรูปภาพ"
-                                    description="คุณแน่ใจหรือไม่ที่จะลบรูปภาพนี้?"
-                                    onConfirm={() => handleDelete(image.id)}
-                                    okText="ลบ"
-                                    cancelText="ยกเลิก"
-                                    okButtonProps={{ danger: true }}
-                                  >
-                                    <Button
-                                      type="text"
-                                      danger
-                                      icon={<DeleteOutlined />}
-                                      className="delete-btn"
-                                      size="small"
-                                    />
-                                  </Popconfirm>
-                                </div>
-                              )}
-
-                              <div className="image-info">
-                                <Tooltip title={image.filename}>
-                                  <span className="image-filename">
-                                    {image.filename}
-                                  </span>
-                                </Tooltip>
-                                <span className="image-size">
-                                  {(image.size / 1024).toFixed(1)} KB
-                                </span>
-                              </div>
-                            </div>
+                          ลองใหม่
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="image-container">
+                        <img
+                          src={getWorkingImageUrl(image.url)}
+                          alt={image.filename}
+                          className="gallery-image-fixed"
+                          loading="lazy"
+                          onError={(e) => {
+                            console.error(
+                              `❌ Failed to load image ${image.id}:`,
+                              {
+                                url: image.url,
+                                filename: image.filename,
+                                error: e.target.error,
+                              }
+                            );
+                            setImageErrors((prev) => ({
+                              ...prev,
+                              [image.id]: true,
+                            }));
+                          }}
+                          onLoad={(e) => {
+                            console.log(
+                              `✅ Successfully loaded image ${image.id}:`,
+                              {
+                                filename: image.filename,
+                                naturalWidth: e.target.naturalWidth,
+                                naturalHeight: e.target.naturalHeight,
+                              }
+                            );
+                            if (imageErrors[image.id]) {
+                              setImageErrors((prev) => {
+                                const newErrors = { ...prev };
+                                delete newErrors[image.id];
+                                return newErrors;
+                              });
+                            }
+                          }}
+                          onClick={() => openImageViewer(index)}
+                          style={{ cursor: "pointer" }}
+                        />
+                        <div
+                          className="image-overlay"
+                          onClick={() => openImageViewer(index)}
+                        >
+                          <div className="preview-mask">
+                            <EyeOutlined />
+                            <span>ดูภาพ</span>
                           </div>
-                        </Col>
+                        </div>
+                      </div>
+                    )}
+
+                    {showControls && (
+                      <div className="image-controls">
+                        <div className="drag-handle" title="ลากเพื่อเรียงลำดับ">
+                          <DragOutlined />
+                        </div>
+
+                        <Popconfirm
+                          title="ยืนยันการลบรูปภาพ"
+                          description={`คุณแน่ใจหรือไม่ที่จะลบรูปภาพ "${image.filename}"?`}
+                          onConfirm={() => handleDelete(image.id)}
+                          okText="ลบ"
+                          cancelText="ยกเลิก"
+                          okButtonProps={{ danger: true }}
+                        >
+                          <Button
+                            type="text"
+                            danger
+                            icon={<DeleteOutlined />}
+                            className="delete-btn"
+                            size="small"
+                          />
+                        </Popconfirm>
+                      </div>
+                    )}
+
+                    <div className="image-info">
+                      <Tooltip title={image.filename}>
+                        <span className="image-filename">{image.filename}</span>
+                      </Tooltip>
+                      <span className="image-size">
+                        {(image.size / 1024).toFixed(1)} KB
+                      </span>
+                      {imageErrors[image.id] && (
+                        <span className="image-status error">โหลดไม่ได้</span>
                       )}
-                    </Draggable>
-                  ))}
-                </Row>
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        </DragDropContext>
+                    </div>
+                  </div>
+                </div>
+              </Col>
+            ))}
+          </Row>
+        </div>
       )}
 
       {/* Upload Modal */}
@@ -387,41 +606,54 @@ const ImageGallery = ({
         <div className="upload-modal-content">
           <div className="upload-info">
             <p>
-              • อัพโหลดได้สูงสุด {6 - images.length} รูป (ปัจจุบันมี{" "}
-              {images.length}/6 รูป)
+              📸 อัพโหลดได้สูงสุด <strong>{6 - images.length}</strong> รูป
+              (ปัจจุบันมี <strong>{images.length}/6</strong> รูป)
             </p>
-            <p>• รองรับไฟล์: JPG, PNG, WebP</p>
-            <p>• ขนาดสูงสุด: 5MB ต่อรูป</p>
-            <p>• รูปภาพจะถูกปรับขนาดให้เหมาะสมอัตโนมัติ</p>
+            <p>📁 รองรับไฟล์: JPG, PNG, WebP</p>
+            <p>📏 ขนาดสูงสุด: 5MB ต่อรูป</p>
+            <p>🔄 รูปภาพจะถูกปรับขนาดให้เหมาะสมอัตโนมัติ</p>
           </div>
 
           <Upload.Dragger
             {...uploadProps}
             className="upload-dragger"
-            loading={uploading}
+            disabled={uploading || images.length >= 6}
           >
             <p className="ant-upload-drag-icon">
               <UploadOutlined />
             </p>
             <p className="ant-upload-text">
-              คลิกหรือลากไฟล์มาที่นี่เพื่ออัพโหลด
+              {uploading
+                ? "กำลังอัพโหลด..."
+                : "คลิกหรือลากไฟล์มาที่นี่เพื่ออัพโหลด"}
             </p>
-            <p className="ant-upload-hint">รองรับการอัพโหลดหลายไฟล์พร้อมกัน</p>
+            <p className="ant-upload-hint">
+              {images.length >= 6
+                ? "ถึงขีดจำกัดแล้ว (6/6 รูป)"
+                : "รองรับการอัพโหลดหลายไฟล์พร้อมกัน"}
+            </p>
           </Upload.Dragger>
+
+          {uploading && (
+            <div className="uploading-status">
+              <Spin size="small" />
+              กำลังอัพโหลดและประมวลผลรูปภาพ...
+            </div>
+          )}
         </div>
       </Modal>
 
-      {/* Preview Modal */}
-      <Modal
-        open={previewVisible}
-        title="ดูรูปภาพ"
-        footer={null}
-        onCancel={() => setPreviewVisible(false)}
-        width={800}
-        centered
-      >
-        <img alt="preview" style={{ width: "100%" }} src={previewImage} />
-      </Modal>
+      {/* Image Viewer */}
+      <ImageViewer
+        visible={viewerVisible}
+        onClose={closeImageViewer}
+        images={images.map((img) => ({
+          ...img,
+          url: getWorkingImageUrl(img.url),
+        }))}
+        currentIndex={currentViewerIndex}
+        onIndexChange={handleViewerIndexChange}
+      />
     </Card>
   );
 };

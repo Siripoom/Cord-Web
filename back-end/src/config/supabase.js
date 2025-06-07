@@ -1,3 +1,4 @@
+// back-end/src/config/supabase.js
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 
@@ -79,7 +80,7 @@ export const uploadToSupabase = async (file, filename) => {
       throw new Error(`Upload failed: ${error.message}`);
     }
 
-    // Get public URL
+    // Get public URL - แก้ไขการดึง URL
     const { data: publicUrlData } = supabase.storage
       .from("images")
       .getPublicUrl(filePath);
@@ -163,12 +164,43 @@ export const testSupabaseConnection = async () => {
   }
 };
 
+// ฟังก์ชันใหม่สำหรับแก้ปัญหา CORS และ Public Access
+export const fixSupabaseImageAccess = async () => {
+  try {
+    // ตรวจสอบ bucket policy
+    const bucketName = "images";
+
+    // อัพเดต bucket ให้เป็น public
+    const { data, error } = await supabase.storage.updateBucket(bucketName, {
+      public: true,
+      allowedMimeTypes: ["image/jpeg", "image/png", "image/webp"],
+    });
+
+    if (error) {
+      console.error("Failed to update bucket:", error);
+      return { success: false, error: error.message };
+    }
+
+    console.log("Bucket updated successfully:", data);
+    return { success: true, data };
+  } catch (error) {
+    console.error("Error fixing bucket access:", error);
+    return { success: false, error: error.message };
+  }
+};
+
 // Test connection on startup
 (async () => {
   try {
     const result = await testSupabaseConnection();
     if (result.success) {
       console.log("Supabase initialized successfully");
+
+      // แก้ไข bucket access
+      const fixResult = await fixSupabaseImageAccess();
+      if (fixResult.success) {
+        console.log("Supabase bucket access fixed");
+      }
     } else {
       console.error("Failed to initialize Supabase:", result.error);
     }

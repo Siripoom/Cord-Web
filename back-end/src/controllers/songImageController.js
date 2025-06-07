@@ -1,3 +1,4 @@
+// back-end/src/controllers/songImageController.js
 import prisma from "../config/db.js";
 import { uploadToSupabase, deleteFromSupabase } from "../config/supabase.js";
 import { generateFilename } from "../config/multer.js";
@@ -73,12 +74,20 @@ export const uploadSongImages = async (req, res) => {
         const uploadResult = await uploadToSupabase(optimizedFile, filename);
 
         if (uploadResult.success) {
+          // แก้ไข URL ให้ถูกต้อง - เพิ่ม CORS headers และ cache control
+          let finalUrl = uploadResult.url;
+
+          // ตรวจสอบว่า URL มี query parameters หรือไม่
+          if (!finalUrl.includes("?")) {
+            finalUrl += "?t=" + Date.now(); // เพิ่ม cache buster
+          }
+
           // Save to database
           const imageRecord = await prisma.songImage.create({
             data: {
               songId: songId,
               filename: file.originalname,
-              url: uploadResult.url,
+              url: finalUrl, // ใช้ URL ที่แก้ไขแล้ว
               size: optimizedBuffer.length,
               mimeType: "image/jpeg",
               order: currentImageCount + i,
@@ -87,11 +96,23 @@ export const uploadSongImages = async (req, res) => {
           });
 
           uploadResults.push(imageRecord);
+
+          console.log(`✅ Successfully uploaded image ${i + 1}:`, {
+            id: imageRecord.id,
+            filename: imageRecord.filename,
+            url: imageRecord.url,
+            size: imageRecord.size,
+          });
         } else {
           failedUploads.push({
             filename: file.originalname,
             error: uploadResult.error,
           });
+
+          console.error(
+            `❌ Failed to upload ${file.originalname}:`,
+            uploadResult.error
+          );
         }
       } catch (error) {
         console.error(`Error processing file ${file.originalname}:`, error);
@@ -101,6 +122,14 @@ export const uploadSongImages = async (req, res) => {
         });
       }
     }
+
+    // Log final results
+    console.log("Upload Summary:", {
+      total: files.length,
+      successful: uploadResults.length,
+      failed: failedUploads.length,
+      songId: songId,
+    });
 
     res.status(200).json({
       success: true,
@@ -134,9 +163,36 @@ export const getSongImages = async (req, res) => {
       orderBy: { order: "asc" },
     });
 
+    // แก้ไข URL ให้แสดงผลได้ - เพิ่ม headers และ cache control
+    const imagesWithFixedUrls = images.map((image) => {
+      let fixedUrl = image.url;
+
+      // เพิ่ม cache buster ถ้ายังไม่มี
+      if (!fixedUrl.includes("?")) {
+        fixedUrl += "?t=" + Date.now();
+      }
+
+      return {
+        ...image,
+        url: fixedUrl,
+      };
+    });
+
+    console.log(`📷 Retrieved ${images.length} images for song ${songId}`);
+
+    // Debug: Log image URLs
+    imagesWithFixedUrls.forEach((image, index) => {
+      console.log(`Image ${index + 1}:`, {
+        id: image.id,
+        filename: image.filename,
+        url: image.url,
+        size: image.size,
+      });
+    });
+
     res.status(200).json({
       success: true,
-      data: images,
+      data: imagesWithFixedUrls,
     });
   } catch (error) {
     console.error("Error fetching song images:", error);
@@ -172,16 +228,14 @@ export const deleteSongImage = async (req, res) => {
       });
     }
 
-    // Extract key from URL for Backblaze deletion
-    const urlParts = image.url.split("/");
-    const key = urlParts.slice(-2).join("/"); // Get "song-images/filename"
-
-    // Delete from Backblaze
-    const deleteResult = await deleteFromBackblaze(key);
-
-    if (!deleteResult.success) {
-      console.error("Failed to delete from Backblaze:", deleteResult.error);
-      // Continue with database deletion even if Backblaze deletion fails
+    // Delete from Supabase using storagePath
+    let deleteResult = { success: true };
+    if (image.storagePath) {
+      deleteResult = await deleteFromSupabase(image.storagePath);
+      if (!deleteResult.success) {
+        console.error("Failed to delete from Supabase:", deleteResult.error);
+        // Continue with database deletion even if Supabase deletion fails
+      }
     }
 
     // Delete from database
@@ -202,6 +256,8 @@ export const deleteSongImage = async (req, res) => {
         data: { order: i },
       });
     }
+
+    console.log(`🗑️ Deleted image ${imageId} from song ${songId}`);
 
     res.status(200).json({
       success: true,
@@ -257,22 +313,82 @@ export const reorderSongImages = async (req, res) => {
       });
     }
 
-    // Return updated images
+    // Return updated images with fixed URLs
     const updatedImages = await prisma.songImage.findMany({
       where: { songId },
       orderBy: { order: "asc" },
     });
 
+    const imagesWithFixedUrls = updatedImages.map((image) => {
+      let fixedUrl = image.url;
+      if (!fixedUrl.includes("?")) {
+        fixedUrl += "?t=" + Date.now();
+      }
+      return {
+        ...image,
+        url: fixedUrl,
+      };
+    });
+
+    console.log(`🔄 Reordered ${imageIds.length} images for song ${songId}`);
+
     res.status(200).json({
       success: true,
       message: "Images reordered successfully",
-      data: updatedImages,
+      data: imagesWithFixedUrls,
     });
   } catch (error) {
     console.error("Error reordering song images:", error);
     res.status(500).json({
       success: false,
       message: "Error reordering images",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * @desc    Test image URL access
+ * @route   GET /api/songs/test-image-access
+ * @access  Public
+ */
+export const testImageAccess = async (req, res) => {
+  try {
+    // ดึงรูปภาพตัวอย่างมา test
+    const sampleImage = await prisma.songImage.findFirst({
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (!sampleImage) {
+      return res.status(404).json({
+        success: false,
+        message: "No images found to test",
+      });
+    }
+
+    // ทดสอบ URL หลายแบบ
+    const baseUrl = sampleImage.url.split("?")[0]; // Remove query params
+    const testUrls = [
+      sampleImage.url, // Original URL
+      baseUrl, // URL without query params
+      baseUrl + "?t=" + Date.now(), // With cache buster
+      baseUrl + "?download=true", // With download flag
+    ];
+
+    res.status(200).json({
+      success: true,
+      message: "Test URLs generated",
+      data: {
+        originalImage: sampleImage,
+        testUrls: testUrls,
+        instructions: "Try each URL in your browser to see which one works",
+      },
+    });
+  } catch (error) {
+    console.error("Error testing image access:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error testing image access",
       error: error.message,
     });
   }
