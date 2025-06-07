@@ -9,6 +9,7 @@ import {
 import { useParams, useNavigate } from "react-router-dom";
 import PublicNavbar from "../../components/Navbar/PublicNavbar";
 import ChordDisplay from "../../components/ChordDisplay";
+import ImageGallery from "../../components/ImageGallery/ImageGallery";
 import { getSongById } from "../../services/songService";
 import dayjs from "dayjs";
 import "./PublicSongDetail.css";
@@ -141,10 +142,10 @@ const PublicSongDetail = () => {
                 <div className="stat-value">{song.defaultKey}</div>
                 <div className="stat-label">คีย์เดิม</div>
               </div>
-              {/* <div className="stat-item">
+              <div className="stat-item">
                 <div className="stat-value">{song.lyrics?.length || 0}</div>
                 <div className="stat-label">จำนวนคำ</div>
-              </div> */}
+              </div>
             </div>
           </div>
         </Card>
@@ -174,6 +175,14 @@ const PublicSongDetail = () => {
             )}
           </div>
         </Card>
+
+        {/* Image Gallery Section - สำหรับผู้ใช้ทั่วไป */}
+        <ImageGallery
+          songId={song.id}
+          showUpload={false}
+          showControls={false}
+          title="รูปภาพคอร์ด"
+        />
 
         {/* Action Buttons */}
         <div className="action-section">

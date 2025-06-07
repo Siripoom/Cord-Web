@@ -29,6 +29,7 @@ import {
 import Sidebar from "../../components/Sidebar/Sidebar";
 import Header from "../../components/Header/Header";
 import ChordDisplay from "../../components/ChordDisplay";
+import ImageGallery from "../../components/ImageGallery/ImageGallery";
 import {
   getAllSongs,
   getSongById,
@@ -537,7 +538,7 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
         </Spin>
       </Modal>
 
-      {/* Song Detail Modal */}
+      {/* Song Detail Modal with Image Gallery */}
       <Modal
         title={
           <Space>
@@ -573,8 +574,9 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
             แก้ไขเพลง
           </Button>,
         ]}
-        width={1000}
+        width={1200}
         destroyOnClose
+        className="song-detail-modal"
       >
         {selectedSong && (
           <div className="song-detail">
@@ -606,6 +608,7 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
 
             <Divider />
 
+            {/* เนื้อเพลงและคอร์ด */}
             <Card title="เนื้อเพลงพร้อมคอร์ด" className="lyrics-card">
               <ChordDisplay
                 lyrics={selectedSong.lyrics || []}
@@ -613,6 +616,14 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
                 showTransposeControls={true}
               />
             </Card>
+
+            {/* Image Gallery สำหรับ Admin - แสดงการจัดการรูป */}
+            <ImageGallery
+              songId={selectedSong.id}
+              showUpload={true}
+              showControls={true}
+              title="จัดการรูปภาพคอร์ด"
+            />
           </div>
         )}
       </Modal>

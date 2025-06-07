@@ -1,0 +1,398 @@
+/* Image Gallery Styles */
+.image-gallery-card {
+  border-radius: 16px;
+  border: none;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.image-gallery-card .ant-card-head {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-bottom: 1px solid #dee2e6;
+}
+
+.image-gallery-card .ant-card-head-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+/* Loading State */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.loading-container p {
+  margin-top: 16px;
+  color: #666;
+  font-size: 16px;
+}
+
+/* Empty State */
+.empty-images {
+  padding: 60px 20px;
+}
+
+/* Images Grid */
+.images-grid {
+  min-height: 120px;
+}
+
+/* Individual Image Item */
+.image-item {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  background: #f8f9fa;
+  border: 2px solid transparent;
+}
+
+.image-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.image-item.dragging {
+  transform: rotate(5deg);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+  border-color: #1890ff;
+  background: #f0f8ff;
+}
+
+/* Image Wrapper */
+.image-wrapper {
+  position: relative;
+  width: 100%;
+  padding-bottom: 75%; /* 4:3 Aspect Ratio */
+  overflow: hidden;
+  border-radius: 8px;
+  background: #f0f0f0;
+}
+
+.gallery-image {
+  position: absolute !important;
+  top: 0;
+  left: 0;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.image-item:hover .gallery-image {
+  transform: scale(1.05);
+}
+
+/* Preview Mask */
+.preview-mask {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+  gap: 8px;
+}
+
+.preview-mask .anticon {
+  font-size: 24px;
+}
+
+/* Image Controls */
+.image-controls {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.image-item:hover .image-controls {
+  opacity: 1;
+}
+
+.drag-handle {
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 6px;
+  border-radius: 6px;
+  cursor: grab;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drag-handle:hover {
+  background: rgba(0, 0, 0, 0.9);
+  transform: scale(1.1);
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.delete-btn {
+  background: rgba(255, 77, 79, 0.9) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 6px !important;
+  transition: all 0.3s ease !important;
+}
+
+.delete-btn:hover {
+  background: rgba(255, 77, 79, 1) !important;
+  transform: scale(1.1);
+}
+
+/* Image Info */
+.image-info {
+  padding: 12px;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.image-filename {
+  font-size: 13px;
+  font-weight: 500;
+  color: #2c3e50;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.image-size {
+  font-size: 11px;
+  color: #6c757d;
+}
+
+/* Upload Modal */
+.upload-modal-content {
+  padding: 16px 0;
+}
+
+.upload-info {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #1890ff;
+}
+
+.upload-info p {
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.upload-info p:last-child {
+  margin-bottom: 0;
+}
+
+.upload-note {
+  color: #6c757d !important;
+  font-style: italic;
+}
+
+.upload-dragger {
+  border: 2px dashed #d9d9d9 !important;
+  border-radius: 12px !important;
+  background: #fafafa !important;
+  transition: all 0.3s ease !important;
+}
+
+.upload-dragger:hover {
+  border-color: #1890ff !important;
+  background: #f0f8ff !important;
+}
+
+.upload-dragger .ant-upload-drag-icon {
+  margin-bottom: 16px;
+}
+
+.upload-dragger .ant-upload-drag-icon .anticon {
+  font-size: 48px;
+  color: #1890ff;
+}
+
+.upload-dragger .ant-upload-text {
+  font-size: 16px;
+  font-weight: 500;
+  color: #2c3e50;
+  margin-bottom: 8px;
+}
+
+.upload-dragger .ant-upload-hint {
+  font-size: 14px;
+  color: #6c757d;
+}
+
+.uploading-status {
+  margin-top: 16px;
+  text-align: center;
+  padding: 16px;
+  background: #f0f8ff;
+  border-radius: 8px;
+  color: #1890ff;
+  font-weight: 500;
+}
+
+.uploading-status .ant-spin {
+  margin-right: 8px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .image-gallery-card .ant-card-head-title {
+    font-size: 16px;
+  }
+
+  .image-gallery-card .ant-card-extra {
+    margin-top: 8px;
+  }
+
+  .image-wrapper {
+    padding-bottom: 100%; /* Square aspect ratio on mobile */
+  }
+
+  .image-controls {
+    opacity: 1; /* Always show on mobile */
+    top: 4px;
+    right: 4px;
+    gap: 2px;
+  }
+
+  .drag-handle,
+  .delete-btn {
+    padding: 4px !important;
+    font-size: 12px;
+  }
+
+  .image-info {
+    padding: 8px;
+  }
+
+  .image-filename {
+    font-size: 12px;
+  }
+
+  .image-size {
+    font-size: 10px;
+  }
+
+  .upload-modal-content {
+    padding: 8px 0;
+  }
+
+  .upload-info {
+    margin-bottom: 16px;
+    padding: 12px;
+  }
+
+  .upload-dragger .ant-upload-drag-icon .anticon {
+    font-size: 36px;
+  }
+
+  .upload-dragger .ant-upload-text {
+    font-size: 14px;
+  }
+
+  .upload-dragger .ant-upload-hint {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .loading-container {
+    padding: 40px 20px;
+  }
+
+  .empty-images {
+    padding: 40px 20px;
+  }
+
+  .image-item {
+    margin-bottom: 16px;
+  }
+
+  .upload-info p {
+    font-size: 13px;
+  }
+}
+
+/* Drag and Drop Visual Feedback */
+.images-grid .ant-col {
+  transition: transform 0.2s ease;
+}
+
+.images-grid .ant-col:hover {
+  z-index: 1;
+}
+
+/* Custom scrollbar for modal */
+.ant-modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ant-modal-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.ant-modal-body::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.ant-modal-body::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Animation for new images */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.image-item {
+  animation: slideInUp 0.3s ease-out;
+}
+
+/* Loading state for individual images */
+.gallery-image.ant-image-img {
+  transition: opacity 0.3s ease;
+}
+
+.gallery-image.ant-image-img[loading] {
+  opacity: 0.5;
+}
+
+/* Success state after upload */
+.upload-success {
+  margin-top: 16px;
+  text-align: center;
+  padding: 16px;
+  background: #f6ffed;
+  border-radius: 8px;
+  color: #52c41a;
+  font-weight: 500;
+  border: 1px solid #b7eb8f;
+}
