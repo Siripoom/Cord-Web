@@ -34,6 +34,8 @@ const ImageGallery = ({
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadModalVisible, setUploadModalVisible] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
   const [previewImage, setPreviewImage] = useState("");
   const [previewVisible, setPreviewVisible] = useState(false);
 
@@ -54,11 +56,59 @@ const ImageGallery = ({
       if (data.success) {
         console.log("Fetched images:", data.data);
         setImages(data.data);
+
+        // Debug: ทดสอบ URL แต่ละรูป (เฉพาะ browser environment)
+        if (typeof window !== "undefined") {
+          data.data.forEach((image, index) => {
+            console.log(`Image ${index + 1}:`, {
+              id: image.id,
+              filename: image.filename,
+              url: image.url,
+              size: image.size,
+            });
+
+            // ทดสอบหลาย URL format สำหรับ Backblaze
+            const fileName = image.url.split("/").pop();
+            const testUrls = [
+              image.url, // URL เดิม
+              `https://f005.backblazeb2.com/file/img-song/song-images/${fileName}`,
+              `https://f004.backblazeb2.com/file/img-song/song-images/${fileName}`,
+              `https://f000.backblazeb2.com/file/img-song/song-images/${fileName}`,
+              `https://img-song.f005.backblazeb2.com/song-images/${fileName}`,
+              `https://f005.backblazeb2.com/b2api/v1/b2_download_file_by_name?bucketName=img-song&fileName=song-images/${fileName}`,
+            ];
+
+            console.log(
+              `Testing ${testUrls.length} URL formats for image ${index + 1}:`
+            );
+
+            testUrls.forEach((testUrl, urlIndex) => {
+              const testImg = new window.Image();
+              testImg.onload = () => {
+                console.log(
+                  `✅ URL Format ${urlIndex + 1} works for image ${index + 1}:`,
+                  testUrl
+                );
+              };
+              testImg.onerror = () => {
+                console.log(
+                  `❌ URL Format ${urlIndex + 1} failed for image ${
+                    index + 1
+                  }:`,
+                  testUrl
+                );
+              };
+              testImg.src = testUrl;
+            });
+          });
+        }
       } else {
         console.error("Failed to fetch images:", data.message);
+        message.error(data.message || "ไม่สามารถโหลดรูปภาพได้");
       }
     } catch (error) {
       console.error("Error fetching images:", error);
+      message.error("เกิดข้อผิดพลาดในการโหลดรูปภาพ");
     } finally {
       setLoading(false);
     }
@@ -280,9 +330,7 @@ const ImageGallery = ({
                                     {...provided.dragHandleProps}
                                     className="drag-handle"
                                   >
-                                    <Tooltip title="ลากเพื่อเรียงลำดับ">
-                                      <DragOutlined />
-                                    </Tooltip>
+                                    <DragOutlined />
                                   </div>
 
                                   <Popconfirm
@@ -296,25 +344,24 @@ const ImageGallery = ({
                                     <Button
                                       type="text"
                                       danger
-                                      size="small"
                                       icon={<DeleteOutlined />}
                                       className="delete-btn"
+                                      size="small"
                                     />
                                   </Popconfirm>
                                 </div>
                               )}
-                            </div>
 
-                            <div className="image-info">
-                              <span
-                                className="image-filename"
-                                title={image.filename}
-                              >
-                                {image.filename}
-                              </span>
-                              <span className="image-size">
-                                {(image.size / 1024).toFixed(1)} KB
-                              </span>
+                              <div className="image-info">
+                                <Tooltip title={image.filename}>
+                                  <span className="image-filename">
+                                    {image.filename}
+                                  </span>
+                                </Tooltip>
+                                <span className="image-size">
+                                  {(image.size / 1024).toFixed(1)} KB
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </Col>
@@ -340,14 +387,12 @@ const ImageGallery = ({
         <div className="upload-modal-content">
           <div className="upload-info">
             <p>
-              <strong>จำนวนรูปปัจจุบัน:</strong> {images.length}/6 รูป
+              • อัพโหลดได้สูงสุด {6 - images.length} รูป (ปัจจุบันมี{" "}
+              {images.length}/6 รูป)
             </p>
-            <p>
-              <strong>สามารถอัพโหลดเพิ่มได้:</strong> {6 - images.length} รูป
-            </p>
-            <p className="upload-note">
-              รองรับไฟล์: JPG, PNG, WebP (ขนาดไม่เกิน 5MB ต่อรูป)
-            </p>
+            <p>• รองรับไฟล์: JPG, PNG, WebP</p>
+            <p>• ขนาดสูงสุด: 5MB ต่อรูป</p>
+            <p>• รูปภาพจะถูกปรับขนาดให้เหมาะสมอัตโนมัติ</p>
           </div>
 
           <Upload.Dragger
@@ -356,26 +401,20 @@ const ImageGallery = ({
             loading={uploading}
           >
             <p className="ant-upload-drag-icon">
-              <PlusOutlined />
+              <UploadOutlined />
             </p>
             <p className="ant-upload-text">
               คลิกหรือลากไฟล์มาที่นี่เพื่ออัพโหลด
             </p>
-            <p className="ant-upload-hint">สามารถเลือกหลายไฟล์พร้อมกันได้</p>
+            <p className="ant-upload-hint">รองรับการอัพโหลดหลายไฟล์พร้อมกัน</p>
           </Upload.Dragger>
-
-          {uploading && (
-            <div className="uploading-status">
-              <Spin /> กำลังอัพโหลด...
-            </div>
-          )}
         </div>
       </Modal>
 
       {/* Preview Modal */}
       <Modal
         open={previewVisible}
-        title="ดูภาพ"
+        title="ดูรูปภาพ"
         footer={null}
         onCancel={() => setPreviewVisible(false)}
         width={800}

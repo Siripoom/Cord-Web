@@ -53,16 +53,17 @@ model Category {
 }
 
 model SongImage {
-  id        String   @id @default(uuid())
-  song      Song     @relation("SongImages", fields: [songId], references: [id], onDelete: Cascade)
-  songId    String
-  filename  String   // ชื่อไฟล์เดิม
-  url       String   // URL ของ Backblaze
-  size      Int      // ขนาดไฟล์ใน bytes
-  mimeType  String   // image/jpeg, image/png, etc.
-  order     Int      @default(0) // ลำดับการแสดง
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(uuid())
+  song        Song     @relation("SongImages", fields: [songId], references: [id], onDelete: Cascade)
+  songId      String
+  filename    String   // ชื่อไฟล์เดิม
+  url         String   // URL ของ Supabase
+  size        Int      // ขนาดไฟล์ใน bytes
+  mimeType    String   // image/jpeg, image/png, etc.
+  order       Int      @default(0) // ลำดับการแสดง
+  storagePath String?  // Supabase storage path สำหรับการลบ
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([songId, order])
 }

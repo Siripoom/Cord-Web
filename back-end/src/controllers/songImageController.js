@@ -1,5 +1,5 @@
 import prisma from "../config/db.js";
-import { uploadToBackblaze, deleteFromBackblaze } from "../config/backblaze.js";
+import { uploadToSupabase, deleteFromSupabase } from "../config/supabase.js";
 import { generateFilename } from "../config/multer.js";
 import sharp from "sharp";
 
@@ -69,8 +69,8 @@ export const uploadSongImages = async (req, res) => {
         // Generate unique filename
         const filename = generateFilename(file.originalname);
 
-        // Upload to Backblaze
-        const uploadResult = await uploadToBackblaze(optimizedFile, filename);
+        // Upload to Supabase
+        const uploadResult = await uploadToSupabase(optimizedFile, filename);
 
         if (uploadResult.success) {
           // Save to database
@@ -82,6 +82,7 @@ export const uploadSongImages = async (req, res) => {
               size: optimizedBuffer.length,
               mimeType: "image/jpeg",
               order: currentImageCount + i,
+              storagePath: uploadResult.key, // เก็บ path สำหรับ Supabase
             },
           });
 

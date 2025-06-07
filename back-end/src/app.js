@@ -12,7 +12,18 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors());
+app.use(
+  cors([
+    {
+      corsRuleName: "downloadFromAnyOrigin",
+      allowedOrigins: ["*"],
+      allowedHeaders: ["*"],
+      allowedOperations: ["b2_download_file_by_id", "b2_download_file_by_name"],
+      exposeHeaders: [],
+      maxAgeSeconds: 3600,
+    },
+  ])
+);
 app.use(express.json());
 
 // API Routes

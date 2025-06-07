@@ -23,6 +23,7 @@
   "description": "",
   "dependencies": {
     "@prisma/client": "^6.3.1",
+    "@supabase/supabase-js": "^2.50.0",
     "backblaze-b2": "^1.7.1",
     "bcryptjs": "^3.0.1",
     "cors": "^2.8.5",
