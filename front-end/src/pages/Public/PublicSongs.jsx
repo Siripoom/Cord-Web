@@ -10,24 +10,28 @@ import {
   Select,
   Button,
 } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
+import { SearchOutlined, ClearOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import PublicNavbar from "../../components/Navbar/PublicNavbar";
-import {
-  getAllSongs,
-  searchSongs,
-  getAllCategories,
-} from "../../services/songService";
+import { getAllSongs, getAllCategories } from "../../services/songService";
 import "./PublicSongs.css";
 const { Option } = Select;
 
 const PublicSongs = () => {
   const navigate = useNavigate();
-  const [songs, setSongs] = useState([]);
+
+  // State สำหรับข้อมูลทั้งหมด
+  const [allSongs, setAllSongs] = useState([]); // เก็บข้อมูลเพลงทั้งหมด
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  // State สำหรับการค้นหาและกรอง
   const [searchText, setSearchText] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(null);
+
+  // State สำหรับการแสดงผลและ pagination
+  const [filteredSongs, setFilteredSongs] = useState([]);
+  const [displaySongs, setDisplaySongs] = useState([]);
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 12,
@@ -35,90 +39,140 @@ const PublicSongs = () => {
   });
 
   useEffect(() => {
-    fetchSongs();
-    fetchCategories();
+    fetchAllData();
   }, []);
 
-  const fetchSongs = async (page = 1, limit = 12, search = "") => {
+  // ฟังก์ชันกรองและอัพเดตผลลัพธ์
+  useEffect(() => {
+    filterAndUpdateResults();
+  }, [allSongs, searchText, selectedCategory, pagination.current]);
+
+  // โหลดข้อมูลทั้งหมดครั้งเดียว
+  const fetchAllData = async () => {
     setLoading(true);
     try {
-      const response = search
-        ? await searchSongs(search, page, limit)
-        : await getAllSongs(page, limit, search);
+      // โหลดเพลงทั้งหมด (เพิ่ม limit ให้สูงเพื่อดึงทั้งหมด)
+      const songsResponse = await getAllSongs(1, 1000); // ดึงสูงสุด 1000 เพลง
 
-      if (response.success) {
-        setSongs(response.data || []);
-        if (response.pagination) {
-          setPagination({
-            current: response.pagination.page,
-            pageSize: response.pagination.limit,
-            total: response.pagination.totalSongs,
-          });
-        }
+      if (songsResponse.success) {
+        setAllSongs(songsResponse.data || []);
       } else {
-        console.error("Failed to fetch songs:", response.message);
-        setSongs([]);
+        console.error("Failed to fetch songs:", songsResponse.message);
+        setAllSongs([]);
+      }
+
+      // โหลดหมวดหมู่
+      const categoriesResponse = await getAllCategories();
+      if (categoriesResponse.success) {
+        setCategories(categoriesResponse.data || []);
       }
     } catch (error) {
-      console.error("Error fetching songs:", error);
-      setSongs([]);
+      console.error("Error fetching data:", error);
+      setAllSongs([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchCategories = async () => {
-    try {
-      const response = await getAllCategories();
-      if (response.success) {
-        setCategories(response.data || []);
-      }
-    } catch (error) {
-      console.error("Error fetching categories:", error);
+  // ฟังก์ชันกรองข้อมูล
+  const filterAndUpdateResults = () => {
+    let filtered = [...allSongs];
+
+    // กรองตามการค้นหา (ชื่อเพลง, ศิลปิน)
+    if (searchText.trim()) {
+      const searchLower = searchText.toLowerCase().trim();
+      filtered = filtered.filter(
+        (song) =>
+          song.title.toLowerCase().includes(searchLower) ||
+          song.artist.toLowerCase().includes(searchLower)
+      );
     }
+
+    // กรองตามหมวดหมู่
+    if (selectedCategory) {
+      filtered = filtered.filter(
+        (song) => song.categoryId === selectedCategory
+      );
+    }
+
+    // อัพเดต filtered songs
+    setFilteredSongs(filtered);
+
+    // คำนวณ pagination
+    const total = filtered.length;
+    const startIndex = (pagination.current - 1) * pagination.pageSize;
+    const endIndex = startIndex + pagination.pageSize;
+    const currentPageSongs = filtered.slice(startIndex, endIndex);
+
+    // อัพเดต display songs และ pagination
+    setDisplaySongs(currentPageSongs);
+    setPagination((prev) => ({
+      ...prev,
+      total: total,
+    }));
   };
 
+  // ฟังก์ชันการค้นหา
   const handleSearch = (value) => {
     setSearchText(value);
-    if (value.trim()) {
-      fetchSongs(1, pagination.pageSize, value.trim());
-    } else {
-      fetchSongs(1, pagination.pageSize);
-    }
+    // รีเซ็ต pagination กลับไปหน้าแรก
+    setPagination((prev) => ({
+      ...prev,
+      current: 1,
+    }));
   };
 
+  // ฟังก์ชันกรองหมวดหมู่
   const handleCategoryFilter = (categoryId) => {
     setSelectedCategory(categoryId);
-    // Note: You might need to implement category filtering in your backend
-    // For now, we'll filter on the frontend
-    if (categoryId) {
-      const filteredSongs = songs.filter(
-        (song) => song.categoryId === categoryId
-      );
-      setSongs(filteredSongs);
-    } else {
-      fetchSongs(pagination.current, pagination.pageSize, searchText);
-    }
+    // รีเซ็ต pagination กลับไปหน้าแรก
+    setPagination((prev) => ({
+      ...prev,
+      current: 1,
+    }));
   };
 
+  // ฟังก์ชันล้างการค้นหา
+  const handleClearSearch = () => {
+    setSearchText("");
+    setSelectedCategory(null);
+    setPagination((prev) => ({
+      ...prev,
+      current: 1,
+    }));
+  };
+
+  // ฟังก์ชันเปลี่ยนหน้า
   const handlePaginationChange = (page, pageSize) => {
-    fetchSongs(page, pageSize, searchText);
+    setPagination((prev) => ({
+      ...prev,
+      current: page,
+      pageSize: pageSize,
+    }));
   };
 
+  // ฟังก์ชันคลิกเพลง
   const handleSongClick = (song) => {
     navigate(`/song/${song.id}`);
   };
 
-  const getRoleColor = (role) => {
-    switch (role) {
-      case "admin":
-        return "red";
-      case "user":
-        return "blue";
-      default:
-        return "default";
+  // สถิติการค้นหา
+  const getSearchStats = () => {
+    if (searchText || selectedCategory) {
+      return {
+        filtered: filteredSongs.length,
+        total: allSongs.length,
+        hasFilter: true,
+      };
     }
+    return {
+      filtered: allSongs.length,
+      total: allSongs.length,
+      hasFilter: false,
+    };
   };
+
+  const searchStats = getSearchStats();
 
   return (
     <div className="public-songs-page">
@@ -142,6 +196,7 @@ const PublicSongs = () => {
                 onSearch={handleSearch}
                 enterButton="ค้นหา"
                 className="search-input"
+                allowClear
               />
             </div>
 
@@ -161,6 +216,17 @@ const PublicSongs = () => {
                   </Option>
                 ))}
               </Select>
+
+              {(searchText || selectedCategory) && (
+                <Button
+                  icon={<ClearOutlined />}
+                  onClick={handleClearSearch}
+                  size="large"
+                  title="ล้างการค้นหา"
+                >
+                  ล้าง
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -171,13 +237,15 @@ const PublicSongs = () => {
               <Spin size="large" />
               <p className="loading-text">กำลังโหลดเพลง...</p>
             </div>
-          ) : songs.length === 0 ? (
+          ) : displaySongs.length === 0 ? (
             <Empty
               image={Empty.PRESENTED_IMAGE_SIMPLE}
               description={
                 <span className="empty-text">
-                  {searchText
-                    ? `ไม่พบเพลงที่ค้นหา "${searchText}"`
+                  {searchStats.hasFilter
+                    ? `ไม่พบเพลงที่ค้นหา ${
+                        searchText ? `"${searchText}"` : ""
+                      } ${selectedCategory ? "ในหมวดหมู่ที่เลือก" : ""}`
                     : "ไม่พบเพลงในระบบ"}
                 </span>
               }
@@ -186,19 +254,51 @@ const PublicSongs = () => {
             <>
               <div className="results-info">
                 <p className="results-count">
-                  พบ {pagination.total} เพลง
-                  {searchText && <span> สำหรับ "{searchText}"</span>}
+                  {searchStats.hasFilter ? (
+                    <>
+                      พบ <strong>{searchStats.filtered}</strong> เพลง จากทั้งหมด{" "}
+                      {searchStats.total} เพลง
+                      {searchText && (
+                        <span>
+                          {" "}
+                          สำหรับ &quot;<strong>{searchText}</strong>&quot;
+                        </span>
+                      )}
+                      {selectedCategory && (
+                        <span>
+                          {" "}
+                          ในหมวดหมู่ &quot;
+                          <strong>
+                            {
+                              categories.find((c) => c.id === selectedCategory)
+                                ?.name
+                            }
+                          </strong>
+                          &quot;
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      พบ <strong>{searchStats.total}</strong> เพลงทั้งหมด
+                    </>
+                  )}
                 </p>
               </div>
 
               <Row gutter={[16, 16]} className="songs-grid">
-                {songs.map((song) => (
+                {displaySongs.map((song) => (
                   <Col xs={24} key={song.id}>
                     <Card className="song-card">
                       <div className="song-card-content">
                         <div className="song-info-left">
                           <div className="song-title">{song.title}</div>
                           <div className="song-artist">{song.artist}</div>
+                          {song.category && (
+                            <div className="song-category">
+                              หมวดหมู่: {song.category.name}
+                            </div>
+                          )}
                         </div>
                         <div className="song-actions-right">
                           <Button
