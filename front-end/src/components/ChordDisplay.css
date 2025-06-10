@@ -753,13 +753,13 @@
 }
 
 .inline-chord {
-  color: #1890ff;
+  /* color: #1890ff; */
   font-weight: 700;
   font-size: 0.85em;
-  background-color: rgba(24, 144, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.1);
   padding: 2px 4px;
   border-radius: 3px;
-  border: 1px solid rgba(24, 144, 255, 0.2);
+  border: 1px solid rgba(253, 254, 255, 0.2);
   margin-right: 4px;
   user-select: none;
 }

@@ -109,54 +109,19 @@ const PublicSongDetail = () => {
         </div>
 
         {/* Song Header */}
-        <Card className="song-header-card">
-          <div className="song-header-content">
-            <div className="song-main-info">
-              <h1 className="song-title">{song.title}</h1>
-              <div className="song-meta">
-                <div className="meta-item">
-                  <UserOutlined className="meta-icon" />
-                  <span className="artist-name">{song.artist}</span>
-                </div>
-
-                {song.category && (
-                  <div className="meta-item">
-                    <TagsOutlined className="meta-icon" />
-                    <Tag color="green" className="category-tag">
-                      {song.category.name}
-                    </Tag>
-                  </div>
-                )}
-
-                <div className="meta-item">
-                  <CalendarOutlined className="meta-icon" />
-                  <span className="created-date">
-                    เพิ่มเมื่อ {dayjs(song.createdAt).format("DD/MM/YYYY")}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="song-stats">
-              <div className="stat-item">
-                <div className="stat-value">{song.defaultKey}</div>
-                <div className="stat-label">คีย์เดิม</div>
-              </div>
-              <div className="stat-item">
-                <div className="stat-value">{song.lyrics?.length || 0}</div>
-                <div className="stat-label">จำนวนคำ</div>
-              </div>
-            </div>
-          </div>
-        </Card>
 
         <Divider className="section-divider" />
 
         {/* Song Content */}
         <Card className="song-content-card">
           <div className="chord-section">
-            <h2 className="section-title">เนื้อเพลงและคอร์ด</h2>
+            <div className="song-header-content">
+              <h2 className="song-title">
+                {song.title}:{song.artist}
+              </h2>
 
+              <div className="stat-value">{song.artist}</div>
+            </div>
             {song.lyrics && song.lyrics.length > 0 ? (
               <ChordDisplay
                 lyrics={song.lyrics}

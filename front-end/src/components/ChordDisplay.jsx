@@ -107,6 +107,18 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
   const transposeChord = (chord, semitones, useFlats = false) => {
     if (!chord || semitones === 0) return chord;
 
+    // ตรวจสอบ slash chord (เช่น C/Bb, Am/F)
+    if (chord.includes("/")) {
+      const [mainChord, bassNote] = chord.split("/");
+
+      // Transpose both parts
+      const transposedMain = transposeChord(mainChord, semitones, useFlats);
+      const transposedBass = transposeChord(bassNote, semitones, useFlats);
+
+      return `${transposedMain}/${transposedBass}`;
+    }
+
+    // Original logic for regular chords
     const match = chord.match(/^([A-G][#b]?)(.*)$/);
     if (!match) return chord;
 
@@ -219,6 +231,18 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
     return classes.join(" ");
   };
 
+  // ฟังก์ชันจัดการปุ่มซ่อนเนื้อ + จัดกลาง
+  const handleLyricsOnlyMode = () => {
+    setShowChords(false);
+    setTextAlign("center");
+  };
+
+  // ฟังก์ชันจัดการปุ่มแสดงคอร์ด + เนื้อ
+  const handleShowChordsMode = () => {
+    setShowChords(true);
+    setTextAlign("left");
+  };
+
   return (
     <div className="chord-display-container">
       {showTransposeControls && (
@@ -261,43 +285,39 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
             </button>
           </div>
 
+          {/* Key Info Display */}
+          {currentKey !== defaultKey && (
+            <div className="key-info">
+              <strong>เปลี่ยนจาก:</strong> {defaultKey} →{" "}
+              <strong>{currentKey}</strong>
+              {semitonesDiff > 0 && (
+                <span className="transpose-info"> (+{semitonesDiff} ขั้น)</span>
+              )}
+              {semitonesDiff < 0 && (
+                <span className="transpose-info"> ({semitonesDiff} ขั้น)</span>
+              )}
+            </div>
+          )}
+
           {/* View Controls */}
           <div className="view-controls">
-            <div className="view-section">
-              <span className="view-label">View :</span>
-              <div className="view-toggle">
-                <button
-                  className={`view-option ${
-                    textAlign === "left" ? "active" : ""
-                  }`}
-                  onClick={() => handleViewChange("left")}
-                >
-                  ⊞ Horizontal
-                </button>
-                <button
-                  className={`view-option ${
-                    textAlign === "center" ? "active" : ""
-                  }`}
-                  onClick={() => handleViewChange("center")}
-                >
-                  ⊞ Vertical
-                </button>
-              </div>
-            </div>
-
             {/* Chord Visibility Toggle */}
             <div className="view-section">
               <span className="view-label">แสดงคอร์ด :</span>
               <div className="view-toggle">
                 <button
-                  className={`view-option ${showChords ? "active" : ""}`}
-                  onClick={() => setShowChords(true)}
+                  className={`view-option ${
+                    showChords && textAlign === "left" ? "active" : ""
+                  }`}
+                  onClick={handleShowChordsMode}
                 >
                   🎵 เนื้อ+คอร์ด
                 </button>
                 <button
-                  className={`view-option ${!showChords ? "active" : ""}`}
-                  onClick={() => setShowChords(false)}
+                  className={`view-option ${
+                    !showChords && textAlign === "center" ? "active" : ""
+                  }`}
+                  onClick={handleLyricsOnlyMode}
                 >
                   📝 เฉพาะเนื้อ
                 </button>
@@ -366,20 +386,6 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
               </div>
             </div>
           )}
-
-          {/* Key Info Display */}
-          {currentKey !== defaultKey && (
-            <div className="key-info">
-              <strong>เปลี่ยนจาก:</strong> {defaultKey} →{" "}
-              <strong>{currentKey}</strong>
-              {semitonesDiff > 0 && (
-                <span className="transpose-info"> (+{semitonesDiff} ขั้น)</span>
-              )}
-              {semitonesDiff < 0 && (
-                <span className="transpose-info"> ({semitonesDiff} ขั้น)</span>
-              )}
-            </div>
-          )}
         </div>
       )}
 
@@ -406,7 +412,7 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
               // Inline chord - แสดงในบรรทัดเดียวกัน (เมื่อ showChords = true)
               return (
                 <span key={idx} className="chord-word inline">
-                  <span className="inline-chord">({transposedChord})</span>
+                  <span className="inline-chord">{transposedChord}</span>
                   <span className="word-text">{word}</span>
                 </span>
               );

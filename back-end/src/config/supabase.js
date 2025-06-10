@@ -4,18 +4,6 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// Debug: ตรวจสอบค่า environment variables
-console.log("Supabase Config Debug:");
-console.log("SUPABASE_URL:", process.env.SUPABASE_URL);
-console.log(
-  "SUPABASE_ANON_KEY:",
-  process.env.SUPABASE_ANON_KEY ? "Set" : "Missing"
-);
-console.log(
-  "SUPABASE_SERVICE_ROLE_KEY:",
-  process.env.SUPABASE_SERVICE_ROLE_KEY ? "Set" : "Missing"
-);
-
 // Validate required environment variables
 const requiredEnvVars = {
   SUPABASE_URL: process.env.SUPABASE_URL,
