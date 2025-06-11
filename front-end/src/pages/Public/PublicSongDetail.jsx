@@ -108,20 +108,48 @@ const PublicSongDetail = () => {
           </Button>
         </div>
 
-        {/* Song Header */}
-
         <Divider className="section-divider" />
 
         {/* Song Content */}
         <Card className="song-content-card">
           <div className="chord-section">
-            <div className="song-header-content">
-              <h2 className="song-title">
-                {song.title}:{song.artist}
-              </h2>
+            {/* Compact Song Header */}
+            <div className="song-header-content-compact">
+              <div className="song-main-info-compact">
+                <h2 className="song-title-compact">{song.title}</h2>
+                <div className="song-meta-compact">
+                  <div className="meta-item-compact">
+                    <UserOutlined className="meta-icon-compact" />
+                    <span className="artist-name-compact">{song.artist}</span>
+                  </div>
 
-              <div className="stat-value">{song.artist}</div>
+                  {song.category && (
+                    <div className="meta-item-compact">
+                      <TagsOutlined className="meta-icon-compact" />
+                      <Tag color="blue" className="category-tag-compact">
+                        {song.category.name}
+                      </Tag>
+                    </div>
+                  )}
+
+                  <div className="meta-item-compact">
+                    <CalendarOutlined className="meta-icon-compact" />
+                    <span className="created-date-compact">
+                      {dayjs(song.createdAt).format("DD/MM/YYYY")}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="song-stats-compact">
+                <div className="stat-item-compact">
+                  <div className="stat-value-compact">{song.defaultKey}</div>
+                  <div className="stat-label-compact">คีย์</div>
+                </div>
+              </div>
             </div>
+
+            {/* Chord Display */}
             {song.lyrics && song.lyrics.length > 0 ? (
               <ChordDisplay
                 lyrics={song.lyrics}

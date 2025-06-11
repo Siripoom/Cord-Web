@@ -27,7 +27,7 @@ const Sidebar = () => {
     <div className="sidebar">
       <div className="sidebar-logo">
         <img src={logo} alt="Chord Style Logo" className="logo-icon" />
-        <h2 className="logo-text">Chord Style</h2>
+        <h2 className="logo-text">Yum Chord</h2>
       </div>
 
       <nav className="sidebar-nav">

@@ -1,5 +1,7 @@
 .chord-display-container {
   width: 100%;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 /* Main Controls Container */
@@ -10,6 +12,8 @@
   border-radius: 16px;
   border: none;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  max-width: 100%;
+  overflow: hidden;
 }
 
 /* Key Control Section */
@@ -147,6 +151,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  white-space: nowrap;
 }
 
 .view-option.active {
@@ -238,6 +243,7 @@
 .scroll-option:hover:not(.active) {
   background: #e0e0e0;
 }
+
 .speed-controls {
   margin-top: 20px;
   padding: 16px;
@@ -365,26 +371,29 @@
   color: #2e7d32;
 }
 
-/* Chord Display - ไม่มีกรอบ แสดงเนื้อเพลงออกมาเลย */
+/* Chord Display - แก้ปัญหาการล้นขอบและปรับขนาดคอร์ด */
 .chord-display {
   font-family: "Sarabun", "Kanit", sans-serif;
-  font-size: clamp(14px, 2.5vw, 22px);
+  font-size: clamp(16px, 3vw, 22px); /* เพิ่มขนาดขั้นต่ำจาก 14px เป็น 16px */
   line-height: 2.4;
-  white-space: pre;
-  padding: 0; /* ไม่มี padding */
-  margin: 0; /* ไม่มี margin */
-  background-color: transparent; /* พื้นหลังโปร่งใส */
-  border: none; /* ไม่มีกรอบ */
-  border-radius: 0; /* ไม่มีมุมโค้ง */
-  min-height: auto; /* ให้ปรับตามเนื้อหา */
-  max-height: none; /* ไม่จำกัดความสูง */
-  overflow: visible; /* แสดงเนื้อหาทั้งหมด */
-  box-shadow: none; /* ไม่มีเงา */
-  word-wrap: break-word;
-  overflow-wrap: break-word;
+  white-space: pre-wrap; /* เปลี่ยนจาก pre เป็น pre-wrap เพื่อให้ขึ้นบรรทัดใหม่ได้ */
+  word-wrap: break-word; /* บังคับตัดคำที่ยาวเกินไป */
+  overflow-wrap: break-word; /* รองรับเบราว์เซอร์รุ่นใหม่ */
+  hyphens: auto; /* เพิ่มเครื่องหมายขีดกลางเมื่อตัดคำ */
+  padding: 0;
+  margin: 0;
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
+  min-height: auto;
+  max-height: none;
+  overflow: visible;
+  box-shadow: none;
   position: relative;
   scroll-behavior: smooth;
   width: 100%;
+  max-width: 100%; /* จำกัดความกว้างไม่ให้เกิน container */
+  box-sizing: border-box; /* รวม padding และ border ในการคำนวณขนาด */
 }
 
 /* Text Alignment Classes */
@@ -400,7 +409,7 @@
 .chord-display.text-compact {
   text-align: left;
   line-height: 1.8;
-  font-size: clamp(12px, 2vw, 18px); /* ขนาดเล็กกว่าในโหมด compact */
+  font-size: clamp(14px, 2.5vw, 18px);
 }
 
 .chord-display.text-compact .chord-word {
@@ -408,7 +417,7 @@
 }
 
 .chord-display.text-compact .chord-text {
-  font-size: 0.85em;
+  font-size: 0.9em; /* เพิ่มจาก 0.85em */
   top: -1.4em;
 }
 
@@ -416,28 +425,34 @@
   display: inline;
   position: relative;
   vertical-align: bottom;
+  word-break: keep-all; /* ป้องกันการตัดคำในคอร์ด */
 }
 
+/* ปรับขนาดคอร์ดให้ใหญ่ขึ้น */
 .chord-text {
   position: absolute;
   top: -1.6em;
   left: 0;
   font-weight: 700;
-  font-size: clamp(0.7em, 1.8vw, 0.9em); /* ปรับขนาดคอร์ดตามหน้าจอ */
+  font-size: clamp(
+    0.8em,
+    2.2vw,
+    1em
+  ); /* เพิ่มขนาดคอร์ดจาก 0.7em-0.9em เป็น 0.8em-1em */
   color: #1890ff;
   user-select: none;
   white-space: nowrap;
   z-index: 1;
-  /* background-color: rgba(24, 144, 255, 0.1); */
   padding: 2px 6px;
   border-radius: 4px;
-  /* border: 1px solid rgba(24, 144, 255, 0.2); */
+  line-height: 1.2; /* เพิ่ม line-height เพื่อไม่ให้คอร์ดซ้อนกัน */
 }
 
 .word-text {
   position: relative;
   z-index: 0;
   font-weight: 400;
+  word-break: break-word; /* อนุญาตให้ตัดคำเมื่อจำเป็น */
 }
 
 .no-lyrics {
@@ -448,7 +463,7 @@
   font-size: 16px;
 }
 
-/* Auto Scrolling Indicator - แสดงสถานะการเลื่อน */
+/* Auto Scrolling Indicator */
 .chord-display.auto-scrolling::before {
   content: "🎵 กำลังเลื่อนอัตโนมัติ... (ความเร็ว " attr(data-speed) ")";
   position: fixed;
@@ -465,10 +480,51 @@
   box-shadow: 0 4px 12px rgba(255, 69, 0, 0.3);
 }
 
-/* Responsive Design */
+/* เพิ่มสไตล์สำหรับ inline chord */
+.chord-word.inline {
+  display: inline;
+  position: relative;
+}
+
+.inline-chord {
+  font-weight: 700;
+  font-size: 0.9em; /* เพิ่มจาก 0.85em */
+  background-color: rgb(255, 255, 255);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgb(255, 255, 255);
+  margin-right: 4px;
+  user-select: none;
+  color: #1890ff;
+  white-space: nowrap; /* ป้องกันการตัดคำในคอร์ด */
+}
+
+.chord-word.above {
+  display: inline;
+  position: relative;
+  vertical-align: bottom;
+}
+
+.chord-word.above .chord-text {
+  position: absolute;
+  top: -1.6em;
+  left: 0;
+  font-weight: 700;
+  font-size: clamp(0.8em, 2.2vw, 1em); /* เพิ่มขนาดเหมือนกับ .chord-text */
+  color: #1890ff;
+  user-select: none;
+  white-space: nowrap;
+  z-index: 1;
+  padding: 2px 6px;
+  border-radius: 4px;
+  line-height: 1.2;
+}
+
+/* Responsive Design - ปรับปรุงเพื่อรองรับมือถือดีขึ้น */
 @media (max-width: 768px) {
   .chord-controls {
-    padding: 20px;
+    padding: 16px;
+    margin-bottom: 16px;
   }
 
   .key-selector-container {
@@ -511,7 +567,6 @@
     text-align: center;
   }
 
-  /* Speed Controls Mobile */
   .speed-controls {
     margin-top: 16px;
     padding: 12px;
@@ -539,19 +594,30 @@
     min-width: auto;
   }
 
+  /* ปรับขนาดเนื้อเพลงและคอร์ดสำหรับ tablet */
   .chord-display {
-    font-size: clamp(16px, 3vw, 20px);
+    font-size: clamp(16px, 3.5vw, 20px);
     line-height: 2.2;
-    /* ไม่มีการจำกัดความสูงในมือถือ */
+    padding: 0 8px; /* เพิ่ม padding ซ้าย-ขวาเล็กน้อย */
   }
 
   .chord-display.text-compact {
-    font-size: clamp(14px, 2.5vw, 16px);
+    font-size: clamp(14px, 3vw, 16px);
     line-height: 1.8;
   }
 
   .chord-text {
-    font-size: clamp(0.75em, 2vw, 0.85em);
+    font-size: clamp(0.8em, 2.5vw, 0.95em); /* เพิ่มขนาดคอร์ด */
+  }
+
+  .inline-chord {
+    font-size: 0.85em;
+    padding: 2px 4px;
+    margin-right: 3px;
+  }
+
+  .chord-word.above .chord-text {
+    font-size: clamp(0.8em, 2.5vw, 0.95em);
   }
 
   .chord-display.auto-scrolling::before {
@@ -564,7 +630,8 @@
 
 @media (max-width: 480px) {
   .chord-controls {
-    padding: 16px;
+    padding: 12px;
+    margin-bottom: 12px;
   }
 
   .key-section-title {
@@ -624,19 +691,32 @@
     min-width: auto;
   }
 
+  /* ปรับขนาดเนื้อเพลงและคอร์ดสำหรับมือถือ */
   .chord-display {
-    font-size: clamp(14px, 4vw, 18px);
-    line-height: 2;
-    /* ไม่มีการจำกัดความสูงในมือถือ */
+    font-size: clamp(15px, 4.5vw, 18px); /* เพิ่มขนาดขั้นต่ำ */
+    line-height: 2.1;
+    padding: 0 4px; /* เพิ่ม padding */
   }
 
   .chord-display.text-compact {
-    font-size: clamp(12px, 3.5vw, 15px);
-    line-height: 1.6;
+    font-size: clamp(13px, 4vw, 15px);
+    line-height: 1.7;
   }
 
   .chord-text {
-    font-size: clamp(0.7em, 2.5vw, 0.8em);
+    font-size: clamp(0.75em, 3vw, 0.9em); /* เพิ่มขนาดคอร์ด */
+    top: -1.5em; /* ปรับตำแหน่งให้เหมาะสม */
+  }
+
+  .inline-chord {
+    font-size: 0.8em;
+    padding: 1px 3px;
+    margin-right: 2px;
+  }
+
+  .chord-word.above .chord-text {
+    font-size: clamp(0.75em, 3vw, 0.9em);
+    top: -1.5em;
   }
 
   .chord-display.auto-scrolling::before {
@@ -650,35 +730,54 @@
 /* สำหรับหน้าจอขนาดใหญ่มาก */
 @media (min-width: 1200px) {
   .chord-display {
-    font-size: clamp(18px, 1.8vw, 24px);
-    /* ไม่จำกัดความสูง */
+    font-size: clamp(20px, 2vw, 26px); /* เพิ่มขนาด */
   }
 
   .chord-display.text-compact {
-    font-size: clamp(16px, 1.5vw, 20px);
+    font-size: clamp(18px, 1.8vw, 22px);
   }
 
   .chord-text {
-    font-size: clamp(0.8em, 1.2vw, 0.95em);
+    font-size: clamp(0.85em, 1.4vw, 1.1em); /* เพิ่มขนาดคอร์ด */
+  }
+
+  .inline-chord {
+    font-size: 0.95em;
+  }
+
+  .chord-word.above .chord-text {
+    font-size: clamp(0.85em, 1.4vw, 1.1em);
   }
 }
 
 /* สำหรับหน้าจอขนาดเล็กมาก */
 @media (max-width: 320px) {
   .chord-display {
-    font-size: clamp(12px, 5vw, 16px);
-    line-height: 1.8;
-    /* ไม่จำกัดความสูง */
+    font-size: clamp(14px, 5.5vw, 16px); /* เพิ่มขนาดขั้นต่ำ */
+    line-height: 1.9;
+    padding: 0 2px;
   }
 
   .chord-display.text-compact {
-    font-size: clamp(10px, 4.5vw, 14px);
-    line-height: 1.5;
+    font-size: clamp(12px, 5vw, 14px);
+    line-height: 1.6;
   }
 
   .chord-text {
-    font-size: clamp(0.65em, 3vw, 0.75em);
+    font-size: clamp(0.7em, 3.5vw, 0.8em);
     padding: 1px 4px;
+    top: -1.4em;
+  }
+
+  .inline-chord {
+    font-size: 0.75em;
+    padding: 1px 2px;
+    margin-right: 1px;
+  }
+
+  .chord-word.above .chord-text {
+    font-size: clamp(0.7em, 3.5vw, 0.8em);
+    top: -1.4em;
   }
 
   .chord-display.auto-scrolling::before {
@@ -689,14 +788,14 @@
   }
 }
 
-/* Scrollbar Styling - ซ่อนเพราะไม่ต้องเลื่อน */
+/* Scrollbar Styling */
 .chord-display::-webkit-scrollbar {
-  display: none; /* ซ่อน scrollbar */
+  display: none;
 }
 
 .chord-display {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* Print styles */
@@ -733,6 +832,20 @@
   .chord-display.auto-scrolling::before {
     display: none;
   }
+
+  .inline-chord {
+    color: #000 !important;
+    background: transparent !important;
+    border: 1px solid #ffffff !important;
+    font-size: 0.8em !important;
+  }
+
+  .chord-word.above .chord-text {
+    color: #000 !important;
+    background: transparent !important;
+    border: none !important;
+    font-size: clamp(0.7em, 1.2vw, 0.8em) !important;
+  }
 }
 
 /* Animation for auto scroll indicator */
@@ -746,82 +859,21 @@
   }
 }
 
-/* เพิ่มสไตล์สำหรับ inline chord */
-.chord-word.inline {
-  display: inline;
-  position: relative;
-}
-
-.inline-chord {
-  /* color: #1890ff; */
-  font-weight: 700;
-  font-size: 0.85em;
-  background-color: rgba(255, 255, 255, 0.1);
-  padding: 2px 4px;
-  border-radius: 3px;
-  border: 1px solid rgba(253, 254, 255, 0.2);
-  margin-right: 4px;
-  user-select: none;
-}
-
-.chord-word.above {
-  display: inline;
-  position: relative;
-  vertical-align: bottom;
-}
-
-.chord-word.above .chord-text {
-  position: absolute;
-  top: -1.6em;
-  left: 0;
-  font-weight: 700;
-  font-size: clamp(0.7em, 1.8vw, 0.9em);
-  color: #1890ff;
-  user-select: none;
-  white-space: nowrap;
-  z-index: 1;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-/* ปรับแต่งสำหรับ mobile */
+/* การปรับปรุงเพิ่มเติมสำหรับมือถือ */
 @media (max-width: 768px) {
-  .inline-chord {
-    font-size: 0.8em;
-    padding: 1px 3px;
-    margin-right: 3px;
+  .chord-display-container {
+    padding: 0 4px; /* เพิ่ม padding container */
   }
 
-  .chord-word.above .chord-text {
-    font-size: clamp(0.75em, 2vw, 0.85em);
-  }
-}
-
-@media (max-width: 480px) {
-  .inline-chord {
-    font-size: 0.75em;
-    padding: 1px 2px;
-    margin-right: 2px;
+  /* ป้องกันการเลื่อนแนวนอน */
+  body {
+    overflow-x: hidden;
   }
 
-  .chord-word.above .chord-text {
-    font-size: clamp(0.7em, 2.5vw, 0.8em);
-  }
-}
-
-/* สำหรับ print */
-@media print {
-  .inline-chord {
-    color: #000 !important;
-    background: transparent !important;
-    border: 1px solid #000 !important;
-    font-size: 0.8em !important;
-  }
-
-  .chord-word.above .chord-text {
-    color: #000 !important;
-    background: transparent !important;
-    border: none !important;
-    font-size: clamp(0.7em, 1.2vw, 0.8em) !important;
+  /* ปรับ container หลัก */
+  .song-detail-container {
+    padding-left: 8px;
+    padding-right: 8px;
+    overflow-x: hidden;
   }
 }

@@ -289,25 +289,19 @@ const PublicSongs = () => {
               <Row gutter={[16, 16]} className="songs-grid">
                 {displaySongs.map((song) => (
                   <Col xs={24} key={song.id}>
-                    <Card className="song-card">
+                    <Card
+                      className="song-card"
+                      onClick={() => handleSongClick(song)}
+                    >
                       <div className="song-card-content">
                         <div className="song-info-left">
                           <div className="song-title">{song.title}</div>
-                          <div className="song-artist">{song.artist}</div>
+                          {/* <div className="song-artist">{song.artist}</div>
                           {song.category && (
                             <div className="song-category">
                               หมวดหมู่: {song.category.name}
                             </div>
-                          )}
-                        </div>
-                        <div className="song-actions-right">
-                          <Button
-                            type="primary"
-                            className="view-chord-btn"
-                            onClick={() => handleSongClick(song)}
-                          >
-                            ดูคอร์ด
-                          </Button>
+                          )} */}
                         </div>
                       </div>
                     </Card>

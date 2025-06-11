@@ -23,7 +23,7 @@ const PublicNavbar = () => {
         <div className="navbar-logo">
           <Link to="/public" className="logo-link">
             <img src={logo} alt="Chord Style Logo" className="logo-icon" />
-            <span className="logo-text">Chord Style</span>
+            <span className="logo-text">Yum Chord</span>
           </Link>
         </div>
 
