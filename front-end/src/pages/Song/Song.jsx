@@ -391,14 +391,14 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
         ),
       width: 120,
     },
-    {
-      title: "จำนวนคำ",
-      key: "wordCount",
-      render: (_, record) => (
-        <Text type="secondary">{record._count?.lyrics || 0} คำ</Text>
-      ),
-      width: 100,
-    },
+    // {
+    //   title: "จำนวนคำ",
+    //   key: "wordCount",
+    //   render: (_, record) => (
+    //     <Text type="secondary">{record._count?.lyrics || 0} คำ</Text>
+    //   ),
+    //   width: 100,
+    // },
     {
       title: "การจัดการ",
       key: "actions",

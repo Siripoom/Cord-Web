@@ -123,7 +123,7 @@
 
 /* Song Cards - Updated Simple Design */
 .songs-grid {
-  margin-bottom: 40px;
+  margin-bottom: 20px;
 }
 
 .song-card {
@@ -141,7 +141,7 @@
 }
 
 .song-card .ant-card-body {
-  padding: 20px 24px;
+  padding: 4px 6px;
 }
 
 .song-card-content {
@@ -157,7 +157,7 @@
 }
 
 .song-title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   color: #1a1a1a;
   margin-bottom: 4px;

@@ -181,8 +181,8 @@ const PublicSongs = () => {
       <div className="songs-container">
         <div className="search-section">
           <div className="search-header">
-            <h1 className="page-title">ค้นหาเพลงที่คุณชื่นชอบ</h1>
-            <p className="page-subtitle">เลือกเพลงและดูคอร์ดกีตาร์แบบง่ายๆ</p>
+            <h1 className="page-title">ค้นหาเพลง</h1>
+            {/* <p className="page-subtitle">เลือกเพลงและดูคอร์ดกีตาร์แบบง่ายๆ</p> */}
           </div>
 
           <div className="search-controls">

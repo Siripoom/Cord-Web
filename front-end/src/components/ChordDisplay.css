@@ -418,7 +418,7 @@
 
 .chord-display.text-compact .chord-text {
   font-size: 0.9em; /* เพิ่มจาก 0.85em */
-  top: -1.4em;
+  top: -1.2em;
 }
 
 .chord-word {
@@ -507,7 +507,7 @@
 
 .chord-word.above .chord-text {
   position: absolute;
-  top: -1.6em;
+  top: -1.2em;
   left: 0;
   font-weight: 700;
   font-size: clamp(0.8em, 2.2vw, 1em); /* เพิ่มขนาดเหมือนกับ .chord-text */
@@ -716,7 +716,7 @@
 
   .chord-word.above .chord-text {
     font-size: clamp(0.75em, 3vw, 0.9em);
-    top: -1.5em;
+    top: -1.2em;
   }
 
   .chord-display.auto-scrolling::before {
@@ -766,7 +766,7 @@
   .chord-text {
     font-size: clamp(0.7em, 3.5vw, 0.8em);
     padding: 1px 4px;
-    top: -1.4em;
+    top: -1.2em;
   }
 
   .inline-chord {
@@ -777,7 +777,7 @@
 
   .chord-word.above .chord-text {
     font-size: clamp(0.7em, 3.5vw, 0.8em);
-    top: -1.4em;
+    top: -1.2em;
   }
 
   .chord-display.auto-scrolling::before {
