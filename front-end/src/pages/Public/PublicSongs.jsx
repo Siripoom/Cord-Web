@@ -13,7 +13,11 @@ import {
 import { SearchOutlined, ClearOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import PublicNavbar from "../../components/Navbar/PublicNavbar";
-import { getAllSongs, getAllCategories } from "../../services/songService";
+import {
+  getAllSongs,
+  getAllCategories,
+  getAllAlbums,
+} from "../../services/songService";
 import "./PublicSongs.css";
 const { Option } = Select;
 
@@ -23,11 +27,13 @@ const PublicSongs = () => {
   // State สำหรับข้อมูลทั้งหมด
   const [allSongs, setAllSongs] = useState([]); // เก็บข้อมูลเพลงทั้งหมด
   const [categories, setCategories] = useState([]);
+  const [albums, setAlbums] = useState([]); // เพิ่ม state สำหรับอัลบั้ม
   const [loading, setLoading] = useState(false);
 
   // State สำหรับการค้นหาและกรอง
   const [searchText, setSearchText] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedAlbum, setSelectedAlbum] = useState(null); // เพิ่ม state สำหรับอัลบั้มที่เลือก
 
   // State สำหรับการแสดงผลและ pagination
   const [filteredSongs, setFilteredSongs] = useState([]);
@@ -45,7 +51,23 @@ const PublicSongs = () => {
   // ฟังก์ชันกรองและอัพเดตผลลัพธ์
   useEffect(() => {
     filterAndUpdateResults();
-  }, [allSongs, searchText, selectedCategory, pagination.current]);
+  }, [
+    allSongs,
+    searchText,
+    selectedCategory,
+    selectedAlbum,
+    pagination.current,
+  ]);
+
+  // ฟังก์ชันเรียงลำดับภาษาไทย
+  const sortThaiStrings = (arr) => {
+    return arr.sort((a, b) => {
+      return a.title.localeCompare(b.title, "th", {
+        numeric: true,
+        sensitivity: "base",
+      });
+    });
+  };
 
   // โหลดข้อมูลทั้งหมดครั้งเดียว
   const fetchAllData = async () => {
@@ -55,7 +77,9 @@ const PublicSongs = () => {
       const songsResponse = await getAllSongs(1, 1000); // ดึงสูงสุด 1000 เพลง
 
       if (songsResponse.success) {
-        setAllSongs(songsResponse.data || []);
+        // เรียงลำดับเพลงตามภาษาไทย ก-ฮ
+        const sortedSongs = sortThaiStrings(songsResponse.data || []);
+        setAllSongs(sortedSongs);
       } else {
         console.error("Failed to fetch songs:", songsResponse.message);
         setAllSongs([]);
@@ -66,17 +90,46 @@ const PublicSongs = () => {
       if (categoriesResponse.success) {
         setCategories(categoriesResponse.data || []);
       }
+
+      // โหลดอัลบั้มทั้งหมด
+      const albumsResponse = await getAllAlbums(1, 1000); // ดึงอัลบั้มทั้งหมด
+      if (albumsResponse.success) {
+        setAlbums(albumsResponse.data || []);
+      } else {
+        console.error("Failed to fetch albums:", albumsResponse.message);
+        setAlbums([]);
+      }
     } catch (error) {
       console.error("Error fetching data:", error);
       setAllSongs([]);
+      setAlbums([]);
     } finally {
       setLoading(false);
     }
   };
 
+  // ฟังก์ชันสร้างความสัมพันธ์ระหว่างเพลงและอัลบั้ม
+  const getSongsWithAlbums = () => {
+    // สร้าง Map สำหรับค้นหาอัลบั้มตาม songId อย่างรวดเร็ว
+    const albumsBySongId = {};
+    albums.forEach((album) => {
+      if (!albumsBySongId[album.songId]) {
+        albumsBySongId[album.songId] = [];
+      }
+      albumsBySongId[album.songId].push(album);
+    });
+
+    // เพิ่มข้อมูลอัลบั้มเข้าไปในแต่ละเพลง
+    return allSongs.map((song) => ({
+      ...song,
+      albums: albumsBySongId[song.id] || [],
+    }));
+  };
+
   // ฟังก์ชันกรองข้อมูล
   const filterAndUpdateResults = () => {
-    let filtered = [...allSongs];
+    const songsWithAlbums = getSongsWithAlbums();
+    let filtered = [...songsWithAlbums];
 
     // กรองตามการค้นหา (ชื่อเพลง, ศิลปิน)
     if (searchText.trim()) {
@@ -84,7 +137,13 @@ const PublicSongs = () => {
       filtered = filtered.filter(
         (song) =>
           song.title.toLowerCase().includes(searchLower) ||
-          song.artist.toLowerCase().includes(searchLower)
+          song.artist.toLowerCase().includes(searchLower) ||
+          // ค้นหาในชื่ออัลบั้มด้วย
+          song.albums.some(
+            (album) =>
+              album.albumName.toLowerCase().includes(searchLower) ||
+              (album.artist && album.artist.toLowerCase().includes(searchLower))
+          )
       );
     }
 
@@ -94,6 +153,16 @@ const PublicSongs = () => {
         (song) => song.categoryId === selectedCategory
       );
     }
+
+    // กรองตามอัลบั้ม
+    if (selectedAlbum) {
+      filtered = filtered.filter((song) =>
+        song.albums.some((album) => album.id === selectedAlbum)
+      );
+    }
+
+    // เรียงลำดับผลลัพธ์ที่กรองแล้วตามภาษาไทย ก-ฮ
+    filtered = sortThaiStrings(filtered);
 
     // อัพเดต filtered songs
     setFilteredSongs(filtered);
@@ -132,10 +201,21 @@ const PublicSongs = () => {
     }));
   };
 
+  // ฟังก์ชันกรองอัลบั้ม
+  const handleAlbumFilter = (albumId) => {
+    setSelectedAlbum(albumId);
+    // รีเซ็ต pagination กลับไปหน้าแรก
+    setPagination((prev) => ({
+      ...prev,
+      current: 1,
+    }));
+  };
+
   // ฟังก์ชันล้างการค้นหา
   const handleClearSearch = () => {
     setSearchText("");
     setSelectedCategory(null);
+    setSelectedAlbum(null); // เพิ่มการล้างอัลบั้มที่เลือก
     setPagination((prev) => ({
       ...prev,
       current: 1,
@@ -158,7 +238,7 @@ const PublicSongs = () => {
 
   // สถิติการค้นหา
   const getSearchStats = () => {
-    if (searchText || selectedCategory) {
+    if (searchText || selectedCategory || selectedAlbum) {
       return {
         filtered: filteredSongs.length,
         total: allSongs.length,
@@ -170,6 +250,18 @@ const PublicSongs = () => {
       total: allSongs.length,
       hasFilter: false,
     };
+  };
+
+  // ฟังก์ชันหาชื่อหมวดหมู่จาก ID
+  const getCategoryName = (categoryId) => {
+    const category = categories.find((c) => c.id === categoryId);
+    return category ? category.name : "";
+  };
+
+  // ฟังก์ชันหาชื่ออัลบั้มจาก ID
+  const getAlbumName = (albumId) => {
+    const album = albums.find((a) => a.id === albumId);
+    return album ? album.albumName : "";
   };
 
   const searchStats = getSearchStats();
@@ -188,7 +280,7 @@ const PublicSongs = () => {
           <div className="search-controls">
             <div className="search-input-wrapper">
               <Input.Search
-                placeholder="ค้นหาชื่อเพลง หรือชื่อศิลปิน..."
+                placeholder="ค้นหาชื่อเพลง, ศิลปิน หรือชื่ออัลบั้ม..."
                 size="large"
                 prefix={<SearchOutlined />}
                 value={searchText}
@@ -217,7 +309,35 @@ const PublicSongs = () => {
                 ))}
               </Select>
 
-              {(searchText || selectedCategory) && (
+              <Select
+                placeholder="เลือกอัลบั้ม"
+                size="large"
+                allowClear
+                value={selectedAlbum}
+                onChange={handleAlbumFilter}
+                className="album-filter"
+                style={{ width: 250 }}
+                showSearch
+                optionFilterProp="children"
+                filterOption={(input, option) =>
+                  option.children.toLowerCase().indexOf(input.toLowerCase()) >=
+                  0
+                }
+              >
+                {albums.map((album) => (
+                  <Option key={album.id} value={album.id}>
+                    {album.albumName}
+                    {album.artist && album.artist !== album.song?.artist && (
+                      <span style={{ color: "#999", fontSize: "12px" }}>
+                        {" "}
+                        - {album.artist}
+                      </span>
+                    )}
+                  </Option>
+                ))}
+              </Select>
+
+              {(searchText || selectedCategory || selectedAlbum) && (
                 <Button
                   icon={<ClearOutlined />}
                   onClick={handleClearSearch}
@@ -245,7 +365,9 @@ const PublicSongs = () => {
                   {searchStats.hasFilter
                     ? `ไม่พบเพลงที่ค้นหา ${
                         searchText ? `"${searchText}"` : ""
-                      } ${selectedCategory ? "ในหมวดหมู่ที่เลือก" : ""}`
+                      } ${selectedCategory ? "ในหมวดหมู่ที่เลือก" : ""} ${
+                        selectedAlbum ? "ในอัลบั้มที่เลือก" : ""
+                      }`
                     : "ไม่พบเพลงในระบบ"}
                 </span>
               }
@@ -268,19 +390,24 @@ const PublicSongs = () => {
                         <span>
                           {" "}
                           ในหมวดหมู่ &quot;
-                          <strong>
-                            {
-                              categories.find((c) => c.id === selectedCategory)
-                                ?.name
-                            }
-                          </strong>
+                          <strong>{getCategoryName(selectedCategory)}</strong>
                           &quot;
                         </span>
                       )}
+                      {selectedAlbum && (
+                        <span>
+                          {" "}
+                          ในอัลบั้ม &quot;
+                          <strong>{getAlbumName(selectedAlbum)}</strong>
+                          &quot;
+                        </span>
+                      )}
+                      <span className="sort-info"> (เรียงตาม ก-ฮ)</span>
                     </>
                   ) : (
                     <>
                       พบ <strong>{searchStats.total}</strong> เพลงทั้งหมด
+                      <span className="sort-info"> (เรียงตาม ก-ฮ)</span>
                     </>
                   )}
                 </p>
@@ -296,12 +423,6 @@ const PublicSongs = () => {
                       <div className="song-card-content">
                         <div className="song-info-left">
                           <div className="song-title">{song.title}</div>
-                          {/* <div className="song-artist">{song.artist}</div>
-                          {song.category && (
-                            <div className="song-category">
-                              หมวดหมู่: {song.category.name}
-                            </div>
-                          )} */}
                         </div>
                       </div>
                     </Card>

@@ -170,10 +170,28 @@
   .navbar-container {
     padding: 0 16px;
     height: 60px;
+    /* เปลี่ยนการจัดตำแหน่งเป็นแบบ flex แบบใหม่เมื่อหน้าจอเล็ก */
+    justify-content: center;
+    position: relative;
   }
 
+  /* ซ่อน nav links */
   .navbar-nav {
     display: none;
+  }
+
+  /* จัดตำแหน่ง logo ให้อยู่ตรงกลาง */
+  .navbar-logo {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  /* จัดตำแหน่ง auth buttons ให้อยู่ขวา */
+  .navbar-auth {
+    position: absolute;
+    right: 16px;
+    gap: 8px;
   }
 
   .logo-text {
@@ -184,10 +202,6 @@
     width: 32px;
     height: 32px;
     margin-right: 8px;
-  }
-
-  .navbar-auth {
-    gap: 8px;
   }
 
   .register-btn,
@@ -213,8 +227,19 @@
     padding: 0 12px;
   }
 
+  /* ยังคงจัดตำแหน่งให้อยู่ตรงกลาง แต่ซ่อนข้อความ */
+  .navbar-logo {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
   .logo-text {
     display: none;
+  }
+
+  .navbar-auth {
+    right: 12px;
   }
 
   .register-btn,

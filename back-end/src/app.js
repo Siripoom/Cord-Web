@@ -33,7 +33,7 @@ app.use("/api/songs", songRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/songs", songImageRoutes);
-app.use("/api/song-albums", SongAlbumsRoutes);
+app.use("/api/albums", SongAlbumsRoutes);
 
 // Health check endpoint
 app.get("/", async (req, res) => {

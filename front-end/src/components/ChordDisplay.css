@@ -716,7 +716,7 @@
 
   .chord-word.above .chord-text {
     font-size: clamp(0.75em, 3vw, 0.9em);
-    top: -1.2em;
+    top: -1.4em;
   }
 
   .chord-display.auto-scrolling::before {
@@ -777,7 +777,7 @@
 
   .chord-word.above .chord-text {
     font-size: clamp(0.7em, 3.5vw, 0.8em);
-    top: -1.2em;
+    top: -1.4em;
   }
 
   .chord-display.auto-scrolling::before {

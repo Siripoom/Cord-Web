@@ -17,6 +17,8 @@ import {
   Spin,
   Divider,
   Popconfirm,
+  DatePicker,
+  Tabs,
 } from "antd";
 import {
   PlusOutlined,
@@ -25,7 +27,9 @@ import {
   DeleteOutlined,
   EyeOutlined,
   ClearOutlined,
+  BookOutlined,
 } from "@ant-design/icons";
+import dayjs from "dayjs";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import Header from "../../components/Header/Header";
 import ChordDisplay from "../../components/ChordDisplay";
@@ -37,6 +41,11 @@ import {
   updateSong,
   deleteSong,
   getAllCategories,
+  getSongAlbums,
+  createSongAlbum,
+  updateAlbum,
+  getAllAlbums,
+  deleteAlbum,
 } from "../../services/songService";
 import "./Song.css";
 import PropTypes from "prop-types";
@@ -44,10 +53,11 @@ import PropTypes from "prop-types";
 const { Title, Text } = Typography;
 const { Option } = Select;
 const { TextArea } = Input;
+const { TabPane } = Tabs;
 
 const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
   // State สำหรับข้อมูลทั้งหมด
-  const [allSongs, setAllSongs] = useState([]); // เก็บข้อมูลเพลงทั้งหมด
+  const [allSongs, setAllSongs] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -70,14 +80,22 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
   const [isSongDetailVisible, setIsSongDetailVisible] = useState(false);
   const [form] = Form.useForm();
 
+  // State สำหรับการจัดการอัลบั้ม
+  const [albums, setAlbums] = useState([]);
+  const [isAlbumModalVisible, setIsAlbumModalVisible] = useState(false);
+  const [selectedAlbum, setSelectedAlbum] = useState(null);
+  const [albumForm] = Form.useForm();
+  const [albumLoading, setAlbumLoading] = useState(false);
+  const [allAlbums, setAllAlbums] = useState([]); // เพิ่มบรรทัดนี้
   useEffect(() => {
     fetchAllData();
   }, []);
 
   // ฟังก์ชันกรองและอัพเดตผลลัพธ์
+  // แก้ไข useEffect - เพิ่ม allAlbums ใน dependency
   useEffect(() => {
     filterAndUpdateResults();
-  }, [allSongs, searchText, selectedCategory, pagination.current]);
+  }, [allSongs, allAlbums, searchText, selectedCategory, pagination.current]); // เพิ่ม allAlbums
 
   // ฟังก์ชันเรียงลำดับภาษาไทย
   const sortThaiText = (a, b) => {
@@ -91,11 +109,9 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      // โหลดเพลงทั้งหมด (เพิ่ม limit ให้สูงเพื่อดึงทั้งหมด)
-      const songsResponse = await getAllSongs(1, 1000); // ดึงสูงสุด 1000 เพลง
+      const songsResponse = await getAllSongs(1, 1000);
 
       if (songsResponse.success) {
-        // เรียงลำดับตามชื่อเพลง ก-ฮ
         const sortedSongs = (songsResponse.data || []).sort(sortThaiText);
         setAllSongs(sortedSongs);
       } else {
@@ -103,10 +119,17 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
         setAllSongs([]);
       }
 
-      // โหลดหมวดหมู่
       const categoriesResponse = await getAllCategories();
       if (categoriesResponse.success) {
         setCategories(categoriesResponse.data || []);
+      }
+      // เพิ่มส่วนนี้ - โหลดอัลบั้มทั้งหมด
+      const albumsResponse = await getAllAlbums(1, 1000);
+      if (albumsResponse.success) {
+        setAllAlbums(albumsResponse.data || []);
+      } else {
+        console.error("Failed to fetch albums:", albumsResponse.message);
+        setAllAlbums([]);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -116,12 +139,47 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
       setLoading(false);
     }
   };
+  // เพิ่มฟังก์ชันนี้หลัง fetchAllData
+  const getSongsWithAlbums = () => {
+    // สร้าง Map สำหรับค้นหาอัลบั้มตาม songId
+    const albumsBySongId = {};
+    allAlbums.forEach((album) => {
+      if (!albumsBySongId[album.songId]) {
+        albumsBySongId[album.songId] = [];
+      }
+      albumsBySongId[album.songId].push(album);
+    });
 
-  // ฟังก์ชันกรองข้อมูล
+    // เพิ่มข้อมูลอัลบั้มเข้าไปในแต่ละเพลง
+    return allSongs.map((song) => ({
+      ...song,
+      albums: albumsBySongId[song.id] || [],
+    }));
+  };
+  // ฟังก์ชันโหลดอัลบั้มของเพลง
+  const fetchSongAlbums = async (songId) => {
+    try {
+      setAlbumLoading(true);
+      const response = await getSongAlbums(songId);
+      if (response.success) {
+        setAlbums(response.data || []);
+      } else {
+        console.error("Failed to fetch albums:", response.message);
+        setAlbums([]);
+      }
+    } catch (error) {
+      console.error("Error fetching albums:", error);
+      setAlbums([]);
+    } finally {
+      setAlbumLoading(false);
+    }
+  };
+
+  // ฟังก์ชันกรองข้อมูล// แก้ไขฟังก์ชัน filterAndUpdateResults
   const filterAndUpdateResults = () => {
-    let filtered = [...allSongs];
+    // เปลี่ยนจาก [...allSongs] เป็น getSongsWithAlbums()
+    let filtered = getSongsWithAlbums();
 
-    // กรองตามการค้นหา (ชื่อเพลง, ศิลปิน)
     if (searchText.trim()) {
       const searchLower = searchText.toLowerCase().trim();
       filtered = filtered.filter(
@@ -131,26 +189,20 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
       );
     }
 
-    // กรองตามหมวดหมู่
     if (selectedCategory) {
       filtered = filtered.filter(
         (song) => song.categoryId === selectedCategory
       );
     }
 
-    // เรียงลำดับใหม่หลังกรอง (ก-ฮ)
     filtered.sort(sortThaiText);
-
-    // อัพเดต filtered songs
     setFilteredSongs(filtered);
 
-    // คำนวณ pagination
     const total = filtered.length;
     const startIndex = (pagination.current - 1) * pagination.pageSize;
     const endIndex = startIndex + pagination.pageSize;
     const currentPageSongs = filtered.slice(startIndex, endIndex);
 
-    // อัพเดต display songs และ pagination
     setDisplaySongs(currentPageSongs);
     setPagination((prev) => ({
       ...prev,
@@ -160,7 +212,6 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
 
   // ฟังก์ชันการค้นหา
   const handleSearch = () => {
-    // รีเซ็ต pagination กลับไปหน้าแรก
     setPagination((prev) => ({
       ...prev,
       current: 1,
@@ -170,7 +221,6 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
   // ฟังก์ชันกรองหมวดหมู่
   const handleCategoryChange = (categoryId) => {
     setSelectedCategory(categoryId);
-    // รีเซ็ต pagination กลับไปหน้าแรก
     setPagination((prev) => ({
       ...prev,
       current: 1,
@@ -201,24 +251,19 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
     if (song) {
       try {
         setLoading(true);
-
-        // Load full song data with lyrics if editing
         const response = await getSongById(song.id);
         if (response.success) {
           const fullSong = response.data;
           console.log("Full song data for editing:", fullSong);
 
-          // Convert lyrics array back to raw format - รองรับทั้ง 2 รูปแบบ
           let lyricsRaw = "";
           if (fullSong.lyrics && Array.isArray(fullSong.lyrics)) {
             lyricsRaw = fullSong.lyrics
               .map((item) => {
                 if (item.chord) {
-                  // ตรวจสอบ chordType และใช้ bracket ที่เหมาะสม
                   if (item.chordType === "inline") {
                     return `{${item.chord}}${item.word}`;
                   } else {
-                    // default หรือ "above"
                     return `[${item.chord}]${item.word}`;
                   }
                 } else {
@@ -276,9 +321,7 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
           `เพลง${selectedSong ? "ได้รับการอัพเดต" : "ถูกสร้าง"}เรียบร้อยแล้ว`
         );
 
-        // รีเฟรชข้อมูลทั้งหมด
         await fetchAllData();
-
         setIsModalVisible(false);
         setSelectedSong(null);
         form.resetFields();
@@ -305,8 +348,6 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
       const response = await deleteSong(song.id);
       if (response.success) {
         message.success("ลบเพลงเรียบร้อยแล้ว");
-
-        // รีเฟรชข้อมูลทั้งหมด
         await fetchAllData();
       } else {
         message.error(response.message || "เกิดข้อผิดพลาดในการลบ");
@@ -327,6 +368,8 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
       if (response.success) {
         console.log("Song details loaded:", response.data);
         setSelectedSong(response.data);
+        // โหลดอัลบั้มของเพลงนี้ด้วย
+        await fetchSongAlbums(song.id);
         setIsSongDetailVisible(true);
       } else {
         message.error(response.message || "ไม่สามารถโหลดรายละเอียดเพลงได้");
@@ -336,6 +379,98 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
       message.error("ไม่สามารถโหลดรายละเอียดเพลงได้");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ฟังก์ชันแสดง Modal อัลบั้ม
+  const showAlbumModal = (album = null) => {
+    if (album) {
+      albumForm.setFieldsValue({
+        albumName: album.albumName,
+        artist: album.artist,
+        releaseDate: album.releaseDate ? dayjs(album.releaseDate) : null,
+        coverImage: album.coverImage,
+      });
+      setSelectedAlbum(album);
+    } else {
+      albumForm.resetFields();
+      setSelectedAlbum(null);
+    }
+    setIsAlbumModalVisible(true);
+  };
+
+  // ฟังก์ชันบันทึกอัลบั้ม
+  // แก้ไขฟังก์ชัน handleAlbumSubmit - เพิ่มการรีเฟรชข้อมูลทั้งหมด
+  const handleAlbumSubmit = async (values) => {
+    try {
+      setAlbumLoading(true);
+      const albumData = {
+        albumName: values.albumName.trim(),
+        artist: values.artist?.trim() || null,
+        releaseDate: values.releaseDate
+          ? values.releaseDate.format("YYYY-MM-DD")
+          : null,
+        coverImage: values.coverImage?.trim() || null,
+      };
+
+      const response = selectedAlbum
+        ? await updateAlbum(selectedAlbum.id, albumData)
+        : await createSongAlbum(selectedSong.id, albumData);
+
+      if (response.success) {
+        message.success(
+          `อัลบั้ม${
+            selectedAlbum ? "ได้รับการอัพเดต" : "ถูกสร้าง"
+          }เรียบร้อยแล้ว`
+        );
+
+        // รีเฟรชรายการอัลบั้มของเพลงนี้
+        await fetchSongAlbums(selectedSong.id);
+
+        // เพิ่มบรรทัดนี้ - รีเฟรชข้อมูลอัลบั้มทั้งหมด
+        await fetchAllData();
+
+        setIsAlbumModalVisible(false);
+        setSelectedAlbum(null);
+        albumForm.resetFields();
+      } else {
+        message.error(response.message || "เกิดข้อผิดพลาด");
+        if (response.errors && response.errors.length > 0) {
+          response.errors.forEach((error) => {
+            message.error(`${error.field}: ${error.message}`);
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error saving album:", error);
+      message.error("เกิดข้อผิดพลาดในการบันทึกอัลบั้ม");
+    } finally {
+      setAlbumLoading(false);
+    }
+  };
+
+  // ฟังก์ชันลบอัลบั้ม
+  // แก้ไขฟังก์ชัน handleDeleteAlbum - เพิ่มการรีเฟรชข้อมูลทั้งหมด
+  const handleDeleteAlbum = async (album) => {
+    try {
+      setAlbumLoading(true);
+      const response = await deleteAlbum(album.id);
+      if (response.success) {
+        message.success("ลบอัลบั้มเรียบร้อยแล้ว");
+
+        // รีเฟรชรายการอัลบั้มของเพลงนี้
+        await fetchSongAlbums(selectedSong.id);
+
+        // เพิ่มบรรทัดนี้ - รีเฟรชข้อมูลอัลบั้มทั้งหมด
+        await fetchAllData();
+      } else {
+        message.error(response.message || "เกิดข้อผิดพลาดในการลบ");
+      }
+    } catch (error) {
+      console.error("Error deleting album:", error);
+      message.error("เกิดข้อผิดพลาดในการลบอัลบั้ม");
+    } finally {
+      setAlbumLoading(false);
     }
   };
 
@@ -380,6 +515,35 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
       width: 80,
     },
     {
+      title: "อัลบั้ม",
+      key: "albums",
+      render: (_, record) => {
+        if (!record.albums || record.albums.length === 0) {
+          return <Text type="secondary">ไม่มีอัลบั้ม</Text>;
+        }
+
+        if (record.albums.length === 1) {
+          return <Tag color="purple">{record.albums[0].albumName}</Tag>;
+        }
+
+        return (
+          <div>
+            {record.albums.slice(0, 2).map((album, index) => (
+              <Tag key={album.id} color="purple" style={{ marginBottom: 2 }}>
+                {album.albumName}
+              </Tag>
+            ))}
+            {record.albums.length > 2 && (
+              <Text type="secondary" style={{ fontSize: "12px" }}>
+                +{record.albums.length - 2} อื่นๆ
+              </Text>
+            )}
+          </div>
+        );
+      },
+      width: 150,
+    },
+    {
       title: "หมวดหมู่",
       dataIndex: "category",
       key: "category",
@@ -391,14 +555,6 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
         ),
       width: 120,
     },
-    // {
-    //   title: "จำนวนคำ",
-    //   key: "wordCount",
-    //   render: (_, record) => (
-    //     <Text type="secondary">{record._count?.lyrics || 0} คำ</Text>
-    //   ),
-    //   width: 100,
-    // },
     {
       title: "การจัดการ",
       key: "actions",
@@ -429,6 +585,40 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
         </Space>
       ),
       width: 150,
+    },
+  ];
+
+  // คอลัมน์สำหรับตารางอัลบั้ม
+  const albumColumns = [
+    {
+      title: "ชื่ออัลบั้ม",
+      dataIndex: "albumName",
+      key: "albumName",
+      render: (text) => <Text strong>{text}</Text>,
+    },
+    {
+      title: "การจัดการ",
+      key: "actions",
+      render: (_, record) => (
+        <Space size="small">
+          <Button
+            type="text"
+            icon={<EditOutlined />}
+            onClick={() => showAlbumModal(record)}
+            title="แก้ไข"
+          />
+          <Popconfirm
+            title="ยืนยันการลบอัลบั้ม"
+            description={`คุณแน่ใจหรือไม่ที่จะลบอัลบั้ม "${record.albumName}"?`}
+            onConfirm={() => handleDeleteAlbum(record)}
+            okText="ลบ"
+            cancelText="ยกเลิก"
+            okButtonProps={{ danger: true }}
+          >
+            <Button type="text" danger icon={<DeleteOutlined />} title="ลบ" />
+          </Popconfirm>
+        </Space>
+      ),
     },
   ];
 
@@ -644,7 +834,7 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
         </Spin>
       </Modal>
 
-      {/* Song Detail Modal with Image Gallery */}
+      {/* Song Detail Modal with Tabs */}
       <Modal
         title={
           <Space>
@@ -656,6 +846,7 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
         onCancel={() => {
           setIsSongDetailVisible(false);
           setSelectedSong(null);
+          setAlbums([]);
         }}
         footer={[
           <Button
@@ -663,6 +854,7 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
             onClick={() => {
               setIsSongDetailVisible(false);
               setSelectedSong(null);
+              setAlbums([]);
             }}
           >
             ปิด
@@ -714,24 +906,184 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
 
             <Divider />
 
-            {/* เนื้อเพลงและคอร์ด */}
-            <Card title="เนื้อเพลงพร้อมคอร์ด" className="lyrics-card">
-              <ChordDisplay
-                lyrics={selectedSong.lyrics || []}
-                defaultKey={selectedSong.defaultKey}
-                showTransposeControls={true}
-              />
-            </Card>
+            {/* Tabs สำหรับแสดงข้อมูลแต่ละส่วน */}
+            <Tabs defaultActiveKey="lyrics" type="card">
+              {/* Tab เนื้อเพลงและคอร์ด */}
+              <TabPane tab="เนื้อเพลงและคอร์ด" key="lyrics">
+                <Card title="เนื้อเพลงพร้อมคอร์ด" className="lyrics-card">
+                  <ChordDisplay
+                    lyrics={selectedSong.lyrics || []}
+                    defaultKey={selectedSong.defaultKey}
+                    showTransposeControls={true}
+                  />
+                </Card>
+              </TabPane>
 
-            {/* Image Gallery สำหรับ Admin - แสดงการจัดการรูป */}
-            <ImageGallery
-              songId={selectedSong.id}
-              showUpload={true}
-              showControls={true}
-              title="จัดการรูปภาพคอร์ด"
-            />
+              {/* Tab อัลบั้ม */}
+              <TabPane
+                tab={
+                  <span>
+                    <BookOutlined />
+                    อัลบั้ม ({albums.length})
+                  </span>
+                }
+                key="albums"
+              >
+                <Card
+                  title="อัลบั้มของเพลงนี้"
+                  extra={
+                    <Button
+                      type="primary"
+                      icon={<PlusOutlined />}
+                      onClick={() => showAlbumModal()}
+                    >
+                      เพิ่มอัลบั้ม
+                    </Button>
+                  }
+                >
+                  <Table
+                    columns={albumColumns}
+                    dataSource={albums}
+                    rowKey="id"
+                    pagination={false}
+                    loading={albumLoading}
+                    size="small"
+                    locale={{
+                      emptyText: "ไม่มีอัลบั้มในเพลงนี้",
+                    }}
+                  />
+                </Card>
+              </TabPane>
+
+              {/* Tab รูปภาพคอร์ด */}
+              <TabPane tab="รูปภาพคอร์ด" key="images">
+                <ImageGallery
+                  songId={selectedSong.id}
+                  showUpload={true}
+                  showControls={true}
+                  title="จัดการรูปภาพคอร์ด"
+                />
+              </TabPane>
+            </Tabs>
           </div>
         )}
+      </Modal>
+
+      {/* Album Form Modal */}
+      <Modal
+        title={selectedAlbum ? "แก้ไขอัลบั้ม" : "เพิ่มอัลบั้มใหม่"}
+        open={isAlbumModalVisible}
+        onCancel={() => {
+          setIsAlbumModalVisible(false);
+          setSelectedAlbum(null);
+          albumForm.resetFields();
+        }}
+        footer={null}
+        width={600}
+        destroyOnClose
+      >
+        <Spin spinning={albumLoading}>
+          <Form form={albumForm} layout="vertical" onFinish={handleAlbumSubmit}>
+            <Form.Item
+              name="albumName"
+              label="ชื่ออัลบั้ม"
+              rules={[
+                { required: true, message: "กรุณากรอกชื่ออัลบั้ม" },
+                { max: 200, message: "ชื่ออัลบั้มต้องไม่เกิน 200 ตัวอักษร" },
+              ]}
+            >
+              <Input placeholder="ชื่ออัลบั้ม" />
+            </Form.Item>
+
+            {/* <Form.Item
+              name="artist"
+              label="ศิลปิน"
+              rules={[
+                { max: 200, message: "ชื่อศิลปินต้องไม่เกิน 200 ตัวอักษร" },
+              ]}
+            >
+              <Input placeholder="ชื่อศิลปิน (ถ้าต่างจากเพลง)" />
+            </Form.Item> */}
+
+            {/* <Form.Item name="releaseDate" label="วันที่ออกอัลบั้ม">
+              <DatePicker
+                style={{ width: "100%" }}
+                format="DD/MM/YYYY"
+                placeholder="เลือกวันที่ออกอัลบั้ม"
+              />
+            </Form.Item> */}
+
+            {/* <Form.Item
+              name="coverImage"
+              label="URL รูปปกอัลบั้ม"
+              rules={[
+                { max: 500, message: "URL รูปปกต้องไม่เกิน 500 ตัวอักษร" },
+                {
+                  type: "url",
+                  message: "กรุณากรอก URL ที่ถูกต้อง",
+                },
+              ]}
+            >
+              <Input
+                placeholder="https://example.com/album-cover.jpg"
+                addonBefore="🖼️"
+              />
+            </Form.Item> */}
+
+            {/* แสดงตัวอย่างรูปปก */}
+            <Form.Item
+              shouldUpdate={(prevValues, currentValues) =>
+                prevValues.coverImage !== currentValues.coverImage
+              }
+            >
+              {({ getFieldValue }) => {
+                const coverImageUrl = getFieldValue("coverImage");
+                return coverImageUrl ? (
+                  <div style={{ textAlign: "center", marginBottom: 16 }}>
+                    <Text
+                      type="secondary"
+                      style={{ display: "block", marginBottom: 8 }}
+                    >
+                      ตัวอย่างรูปปก:
+                    </Text>
+                    <img
+                      src={coverImageUrl}
+                      alt="Album cover preview"
+                      style={{
+                        width: 120,
+                        height: 120,
+                        objectFit: "cover",
+                        border: "1px solid #d9d9d9",
+                        borderRadius: 8,
+                      }}
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                      }}
+                    />
+                  </div>
+                ) : null;
+              }}
+            </Form.Item>
+
+            <Form.Item>
+              <Space>
+                <Button
+                  onClick={() => {
+                    setIsAlbumModalVisible(false);
+                    setSelectedAlbum(null);
+                    albumForm.resetFields();
+                  }}
+                  disabled={albumLoading}
+                >
+                  ยกเลิก
+                </Button>
+                <Button type="primary" htmlType="submit" loading={albumLoading}>
+                  {selectedAlbum ? "บันทึกการแก้ไข" : "เพิ่มอัลบั้ม"}
+                </Button>
+              </Space>
+            </Form.Item>
+          </Form>
+        </Spin>
       </Modal>
     </div>
   );
