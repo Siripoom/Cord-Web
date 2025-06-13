@@ -7,6 +7,7 @@ import songRoutes from "./routes/songRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import songImageRoutes from "./routes/songImageRoutes.js";
+import SongAlbumsRoutes from "./routes/songAlbumRoutes.js";
 
 dotenv.config();
 
@@ -32,6 +33,7 @@ app.use("/api/songs", songRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/songs", songImageRoutes);
+app.use("/api/song-albums", SongAlbumsRoutes);
 
 // Health check endpoint
 app.get("/", async (req, res) => {

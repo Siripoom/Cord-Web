@@ -254,3 +254,156 @@ export const getSongsByCategory = async (categoryId, page = 1, limit = 10) => {
     };
   }
 };
+
+// ==================== ALBUM SERVICES ====================
+
+/**
+ * Get all albums with pagination
+ */
+export const getAllAlbums = async (page = 1, limit = 10) => {
+  try {
+    const params = { page, limit };
+    const response = await api.get("/albums", { params });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching albums:", error);
+    return {
+      success: false,
+      message: error.response?.data?.message || "Failed to fetch albums",
+      error: error.response?.data || error.message,
+    };
+  }
+};
+
+/**
+ * Get albums for a specific song
+ */
+export const getSongAlbums = async (songId) => {
+  try {
+    const response = await api.get(`/albums/songs/${songId}/albums`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching albums for song ${songId}:`, error);
+    return {
+      success: false,
+      message: error.response?.data?.message || "Failed to fetch song albums",
+      error: error.response?.data || error.message,
+    };
+  }
+};
+
+/**
+ * Get album by ID
+ */
+export const getAlbumById = async (id) => {
+  try {
+    const response = await api.get(`/albums/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching album with ID ${id}:`, error);
+    return {
+      success: false,
+      message:
+        error.response?.data?.message || `Failed to fetch album with ID ${id}`,
+      error: error.response?.data || error.message,
+    };
+  }
+};
+
+/**
+ * Create new album for a song
+ */
+export const createSongAlbum = async (songId, albumData) => {
+  try {
+    const cleanData = {
+      albumName: albumData.albumName?.trim(),
+      artist: albumData.artist?.trim() || null,
+      releaseDate: albumData.releaseDate || null,
+      coverImage: albumData.coverImage?.trim() || null,
+    };
+
+    const response = await api.post(
+      `/albums/songs/${songId}/albums`,
+      cleanData,
+      getAuthHeader()
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error creating album:", error);
+    return {
+      success: false,
+      message: error.response?.data?.message || "Failed to create album",
+      errors: error.response?.data?.errors || [],
+      error: error.response?.data || error.message,
+    };
+  }
+};
+
+/**
+ * Update album
+ */
+export const updateAlbum = async (id, albumData) => {
+  try {
+    const cleanData = {};
+
+    if (albumData.albumName !== undefined)
+      cleanData.albumName = albumData.albumName.trim();
+    if (albumData.artist !== undefined)
+      cleanData.artist = albumData.artist?.trim() || null;
+    if (albumData.releaseDate !== undefined)
+      cleanData.releaseDate = albumData.releaseDate || null;
+    if (albumData.coverImage !== undefined)
+      cleanData.coverImage = albumData.coverImage?.trim() || null;
+
+    const response = await api.put(`/albums/${id}`, cleanData, getAuthHeader());
+    return response.data;
+  } catch (error) {
+    console.error(`Error updating album with ID ${id}:`, error);
+    return {
+      success: false,
+      message: error.response?.data?.message || "Failed to update album",
+      errors: error.response?.data?.errors || [],
+      error: error.response?.data || error.message,
+    };
+  }
+};
+
+/**
+ * Delete album
+ */
+export const deleteAlbum = async (id) => {
+  try {
+    const response = await api.delete(`/albums/${id}`, getAuthHeader());
+    return response.data;
+  } catch (error) {
+    console.error(`Error deleting album with ID ${id}:`, error);
+    return {
+      success: false,
+      message: error.response?.data?.message || "Failed to delete album",
+      error: error.response?.data || error.message,
+    };
+  }
+};
+
+/**
+ * Search albums
+ */
+export const searchAlbums = async (query, page = 1, limit = 10) => {
+  try {
+    const response = await api.get("/albums/search", {
+      params: {
+        q: query,
+        page,
+        limit,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error searching albums:", error);
+    return {
+      success: false,
+      message: error.response?.data?.message || "Failed to search albums",
+      error: error.response?.data || error.message,
+    };
+  }
+};
