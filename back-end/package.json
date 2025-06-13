@@ -22,7 +22,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@prisma/client": "^6.3.1",
+    "@prisma/client": "^6.9.0",
     "@supabase/supabase-js": "^2.50.0",
     "backblaze-b2": "^1.7.1",
     "bcryptjs": "^3.0.1",
@@ -32,12 +32,12 @@
     "express-validator": "^7.2.1",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
-    "prisma": "^6.3.1",
     "sharp": "^0.34.2",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.9"
+    "nodemon": "^3.1.9",
+    "prisma": "^6.9.0"
   },
   "packageManager": "yarn@1.22.19+sha512.ff4579ab459bb25aa7c0ff75b62acebe576f6084b36aa842971cf250a5d8c6cd3bc9420b22ce63c7f93a0857bc6ef29291db39c3e7a23aab5adfd5a4dd6c5d71"
 }

@@ -31,6 +31,7 @@ model Song {
   images      SongImage[] @relation("SongImages")
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  albums      SongAlbum[] @relation("SongAlbums")
 }
 
 model Lyric {
@@ -51,6 +52,21 @@ model Category {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model SongAlbum {
+  id          String   @id @default(uuid())
+  song        Song     @relation("SongAlbums", fields: [songId], references: [id], onDelete: Cascade)
+  songId      String
+  albumName   String
+  artist      String?
+  releaseDate DateTime?
+  coverImage  String? // URL ของภาพปก
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([songId])
+}
+
 
 model SongImage {
   id          String   @id @default(uuid())

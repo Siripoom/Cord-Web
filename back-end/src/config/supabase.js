@@ -99,21 +99,21 @@ export const uploadToSupabase = async (file, filename) => {
 
 export const deleteFromSupabase = async (filePath) => {
   try {
-    console.log("Deleting from Supabase:", filePath);
+    // console.log("Deleting from Supabase:", filePath);
 
     const { data, error } = await supabase.storage
       .from("images")
       .remove([filePath]);
 
     if (error) {
-      console.error("Supabase delete error:", error);
+      // console.error("Supabase delete error:", error);
       throw new Error(`Delete failed: ${error.message}`);
     }
 
-    console.log("Supabase delete successful:", data);
+    // console.log("Supabase delete successful:", data);
     return { success: true, data };
   } catch (error) {
-    console.error("Supabase delete error:", error);
+    // console.error("Supabase delete error:", error);
     return {
       success: false,
       error: error.message,
@@ -123,7 +123,7 @@ export const deleteFromSupabase = async (filePath) => {
 
 export const testSupabaseConnection = async () => {
   try {
-    console.log("Testing Supabase connection...");
+    // console.log("Testing Supabase connection...");
 
     // Test by listing files in the bucket
     const { data, error } = await supabase.storage
@@ -137,7 +137,7 @@ export const testSupabaseConnection = async () => {
       return { success: false, error: error.message };
     }
 
-    console.log("Supabase connection test successful");
+    // console.log("Supabase connection test successful");
     return {
       success: true,
       data: {
@@ -169,7 +169,7 @@ export const fixSupabaseImageAccess = async () => {
       return { success: false, error: error.message };
     }
 
-    console.log("Bucket updated successfully:", data);
+    // console.log("Bucket updated successfully:", data);
     return { success: true, data };
   } catch (error) {
     console.error("Error fixing bucket access:", error);
@@ -182,12 +182,12 @@ export const fixSupabaseImageAccess = async () => {
   try {
     const result = await testSupabaseConnection();
     if (result.success) {
-      console.log("Supabase initialized successfully");
+      // console.log("Supabase initialized successfully");
 
       // แก้ไข bucket access
       const fixResult = await fixSupabaseImageAccess();
       if (fixResult.success) {
-        console.log("Supabase bucket access fixed");
+        // console.log("Supabase bucket access fixed");
       }
     } else {
       console.error("Failed to initialize Supabase:", result.error);
