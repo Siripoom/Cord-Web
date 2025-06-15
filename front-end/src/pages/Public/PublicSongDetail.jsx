@@ -21,6 +21,10 @@ const PublicSongDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // View control states
+  const [showChords, setShowChords] = useState(true);
+  const [textAlign, setTextAlign] = useState("left");
+
   useEffect(() => {
     fetchSongDetail();
   }, [id]);
@@ -51,6 +55,18 @@ const PublicSongDetail = () => {
 
   const handleBackToList = () => {
     navigate("/songs");
+  };
+
+  // ฟังก์ชันจัดการปุ่มซ่อนเนื้อ + จัดกลาง
+  const handleLyricsOnlyMode = () => {
+    setShowChords(false);
+    setTextAlign("center");
+  };
+
+  // ฟังก์ชันจัดการปุ่มแสดงคอร์ด + เนื้อ
+  const handleShowChordsMode = () => {
+    setShowChords(true);
+    setTextAlign("left");
   };
 
   if (loading) {
@@ -141,6 +157,30 @@ const PublicSongDetail = () => {
                 </div>
               </div>
 
+              {/* View Controls - ย้ายมาจาก ChordDisplay */}
+              <div className="view-controls">
+                <div className="view-section">
+                  <span className="view-label">แสดงคอร์ด :</span>
+                  <div className="view-toggle">
+                    <button
+                      className={`view-option ${
+                        showChords && textAlign === "left" ? "active" : ""
+                      }`}
+                      onClick={handleShowChordsMode}
+                    >
+                      🎵 เนื้อ+คอร์ด
+                    </button>
+                    <button
+                      className={`view-option ${
+                        !showChords && textAlign === "center" ? "active" : ""
+                      }`}
+                      onClick={handleLyricsOnlyMode}
+                    >
+                      📝 เฉพาะเนื้อ
+                    </button>
+                  </div>
+                </div>
+              </div>
               <div className="song-stats-compact">
                 <div className="stat-item-compact">
                   <div className="stat-value-compact">{song.defaultKey}</div>
@@ -155,6 +195,8 @@ const PublicSongDetail = () => {
                 lyrics={song.lyrics}
                 defaultKey={song.defaultKey}
                 showTransposeControls={true}
+                showChords={showChords}
+                textAlign={textAlign}
               />
             ) : (
               <div className="no-lyrics">

@@ -591,3 +591,110 @@
 .song-detail .lyrics-card .ant-card-body {
   padding: 20px;
 }
+/* View Controls Section */
+.view-controls-section {
+  margin: 16px 0;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.view-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.view-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.view-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #495057;
+  white-space: nowrap;
+}
+
+.view-toggle {
+  display: flex;
+  background: #ffffff;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.view-option {
+  padding: 8px 16px;
+  border: none;
+  background: #ffffff;
+  color: #495057;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-right: 1px solid #dee2e6;
+  white-space: nowrap;
+}
+
+.view-option:last-child {
+  border-right: none;
+}
+
+.view-option:hover {
+  background: #f8f9fa;
+  color: #212529;
+}
+
+.view-option.active {
+  background: #007bff;
+  color: #ffffff;
+}
+
+.view-option.active:hover {
+  background: #0056b3;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .view-controls-section {
+    margin: 12px 0;
+    padding: 12px;
+  }
+
+  .view-controls {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .view-section {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .view-toggle {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .view-option {
+    flex: 1;
+    text-align: center;
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .view-option {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+}

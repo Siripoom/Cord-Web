@@ -28,6 +28,7 @@ const PublicSongs = () => {
   const [allSongs, setAllSongs] = useState([]); // เก็บข้อมูลเพลงทั้งหมด
   const [categories, setCategories] = useState([]);
   const [albums, setAlbums] = useState([]); // เพิ่ม state สำหรับอัลบั้ม
+  const [uniqueAlbums, setUniqueAlbums] = useState([]); // เพิ่ม state สำหรับอัลบั้มที่ไม่ซ้ำ
   const [loading, setLoading] = useState(false);
 
   // State สำหรับการค้นหาและกรอง
@@ -69,6 +70,32 @@ const PublicSongs = () => {
     });
   };
 
+  // ฟังก์ชันสร้างรายการอัลบั้มที่ไม่ซ้ำ
+  const getUniqueAlbums = (albumsData) => {
+    const albumMap = new Map();
+    
+    albumsData.forEach((album) => {
+      const key = album.albumName.toLowerCase(); // ใช้ชื่ออัลบั้มเป็น key (ตัวพิมพ์เล็ก)
+      
+      if (!albumMap.has(key)) {
+        albumMap.set(key, {
+          id: album.id,
+          albumName: album.albumName,
+          artist: album.artist,
+          // เก็บข้อมูลเพิ่มเติมตามต้องการ
+        });
+      }
+    });
+    
+    // แปลง Map กลับเป็น Array และเรียงลำดับตามชื่ออัลบั้ม
+    return Array.from(albumMap.values()).sort((a, b) => 
+      a.albumName.localeCompare(b.albumName, "th", {
+        numeric: true,
+        sensitivity: "base",
+      })
+    );
+  };
+
   // โหลดข้อมูลทั้งหมดครั้งเดียว
   const fetchAllData = async () => {
     setLoading(true);
@@ -94,15 +121,22 @@ const PublicSongs = () => {
       // โหลดอัลบั้มทั้งหมด
       const albumsResponse = await getAllAlbums(1, 1000); // ดึงอัลบั้มทั้งหมด
       if (albumsResponse.success) {
-        setAlbums(albumsResponse.data || []);
+        const albumsData = albumsResponse.data || [];
+        setAlbums(albumsData);
+        
+        // สร้างรายการอัลบั้มที่ไม่ซ้ำ
+        const uniqueAlbumsData = getUniqueAlbums(albumsData);
+        setUniqueAlbums(uniqueAlbumsData);
       } else {
         console.error("Failed to fetch albums:", albumsResponse.message);
         setAlbums([]);
+        setUniqueAlbums([]);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
       setAllSongs([]);
       setAlbums([]);
+      setUniqueAlbums([]);
     } finally {
       setLoading(false);
     }
@@ -154,11 +188,14 @@ const PublicSongs = () => {
       );
     }
 
-    // กรองตามอัลบั้ม
+    // กรองตามอัลบั้ม (ใช้ชื่ออัลบั้มแทน ID)
     if (selectedAlbum) {
-      filtered = filtered.filter((song) =>
-        song.albums.some((album) => album.id === selectedAlbum)
-      );
+      const selectedAlbumName = uniqueAlbums.find(album => album.id === selectedAlbum)?.albumName;
+      if (selectedAlbumName) {
+        filtered = filtered.filter((song) =>
+          song.albums.some((album) => album.albumName === selectedAlbumName)
+        );
+      }
     }
 
     // เรียงลำดับผลลัพธ์ที่กรองแล้วตามภาษาไทย ก-ฮ
@@ -258,9 +295,9 @@ const PublicSongs = () => {
     return category ? category.name : "";
   };
 
-  // ฟังก์ชันหาชื่ออัลบั้มจาก ID
+  // ฟังก์ชันหาชื่ออัลบั้มจาก ID (ใช้กับ uniqueAlbums)
   const getAlbumName = (albumId) => {
-    const album = albums.find((a) => a.id === albumId);
+    const album = uniqueAlbums.find((a) => a.id === albumId);
     return album ? album.albumName : "";
   };
 
@@ -324,10 +361,10 @@ const PublicSongs = () => {
                   0
                 }
               >
-                {albums.map((album) => (
+                {uniqueAlbums.map((album) => (
                   <Option key={album.id} value={album.id}>
                     {album.albumName}
-                    {album.artist && album.artist !== album.song?.artist && (
+                    {album.artist && (
                       <span style={{ color: "#999", fontSize: "12px" }}>
                         {" "}
                         - {album.artist}

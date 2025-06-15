@@ -431,7 +431,7 @@
 /* ปรับขนาดคอร์ดให้ใหญ่ขึ้น */
 .chord-text {
   position: absolute;
-  top: -1.6em;
+  top: -1.3em;
   left: 0;
   font-weight: 700;
   font-size: clamp(
@@ -705,7 +705,7 @@
 
   .chord-text {
     font-size: clamp(0.75em, 3vw, 0.9em); /* เพิ่มขนาดคอร์ด */
-    top: -1.5em; /* ปรับตำแหน่งให้เหมาะสม */
+    top: -1.3em; /* ปรับตำแหน่งให้เหมาะสม */
   }
 
   .inline-chord {

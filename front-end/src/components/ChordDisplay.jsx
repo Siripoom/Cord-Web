@@ -56,15 +56,19 @@ const FLAT_KEYS = [
   "B",
 ];
 
-const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
+const ChordDisplay = ({
+  lyrics,
+  defaultKey,
+  showTransposeControls = true,
+  showChords = true, // รับค่าจาก parent
+  textAlign = "left", // รับค่าจาก parent
+}) => {
   const [currentKey, setCurrentKey] = useState(defaultKey);
   const [notation, setNotation] = useState("sharp");
-  const [textAlign, setTextAlign] = useState("left");
   const [scrollMode, setScrollMode] = useState("step");
   const [isAutoScrolling, setIsAutoScrolling] = useState(false);
   const [scrollSpeed, setScrollSpeed] = useState(3);
   const [showKeyModal, setShowKeyModal] = useState(false);
-  const [showChords, setShowChords] = useState(true); // เพิ่ม state สำหรับแสดง/ซ่อนคอร์ด
   const intervalRef = useRef(null);
   const displayRef = useRef(null);
 
@@ -165,11 +169,6 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
     setShowKeyModal(false);
   };
 
-  // Handle view mode change
-  const handleViewChange = (view) => {
-    setTextAlign(view);
-  };
-
   // Handle scroll mode change
   const handleScrollChange = (mode) => {
     setScrollMode(mode);
@@ -231,18 +230,6 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
     return classes.join(" ");
   };
 
-  // ฟังก์ชันจัดการปุ่มซ่อนเนื้อ + จัดกลาง
-  const handleLyricsOnlyMode = () => {
-    setShowChords(false);
-    setTextAlign("center");
-  };
-
-  // ฟังก์ชันจัดการปุ่มแสดงคอร์ด + เนื้อ
-  const handleShowChordsMode = () => {
-    setShowChords(true);
-    setTextAlign("left");
-  };
-
   return (
     <div className="chord-display-container">
       {showTransposeControls && (
@@ -283,46 +270,6 @@ const ChordDisplay = ({ lyrics, defaultKey, showTransposeControls = true }) => {
             >
               Reset
             </button>
-          </div>
-
-          {/* Key Info Display */}
-          {currentKey !== defaultKey && (
-            <div className="key-info">
-              <strong>เปลี่ยนจาก:</strong> {defaultKey} →{" "}
-              <strong>{currentKey}</strong>
-              {semitonesDiff > 0 && (
-                <span className="transpose-info"> (+{semitonesDiff} ขั้น)</span>
-              )}
-              {semitonesDiff < 0 && (
-                <span className="transpose-info"> ({semitonesDiff} ขั้น)</span>
-              )}
-            </div>
-          )}
-
-          {/* View Controls */}
-          <div className="view-controls">
-            {/* Chord Visibility Toggle */}
-            <div className="view-section">
-              <span className="view-label">แสดงคอร์ด :</span>
-              <div className="view-toggle">
-                <button
-                  className={`view-option ${
-                    showChords && textAlign === "left" ? "active" : ""
-                  }`}
-                  onClick={handleShowChordsMode}
-                >
-                  🎵 เนื้อ+คอร์ด
-                </button>
-                <button
-                  className={`view-option ${
-                    !showChords && textAlign === "center" ? "active" : ""
-                  }`}
-                  onClick={handleLyricsOnlyMode}
-                >
-                  📝 เฉพาะเนื้อ
-                </button>
-              </div>
-            </div>
           </div>
 
           {/* Scroll Controls */}
@@ -500,12 +447,14 @@ ChordDisplay.propTypes = {
     PropTypes.shape({
       word: PropTypes.string.isRequired,
       chord: PropTypes.string,
-      chordType: PropTypes.string, // เพิ่ม chordType
+      chordType: PropTypes.string,
       wordOrder: PropTypes.number,
     })
   ).isRequired,
   defaultKey: PropTypes.string.isRequired,
   showTransposeControls: PropTypes.bool,
+  showChords: PropTypes.bool, // เพิ่ม PropType
+  textAlign: PropTypes.string, // เพิ่ม PropType
 };
 
 export default ChordDisplay;
