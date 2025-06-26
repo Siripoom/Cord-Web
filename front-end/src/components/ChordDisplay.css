@@ -417,7 +417,7 @@
 }
 
 .chord-display.text-compact .chord-text {
-  font-size: 0.9em; /* เพิ่มจาก 0.85em */
+  font-size: 0.75em; /* เพิ่มจาก 0.85em */
   top: -1.2em;
 }
 
