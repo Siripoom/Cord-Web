@@ -1,3 +1,4 @@
+// อัพเดต PublicSongs.jsx - เพิ่ม meta tags สำหรับหน้าหลัก
 import { useState, useEffect } from "react";
 import {
   Input,
@@ -12,6 +13,7 @@ import {
 } from "antd";
 import { SearchOutlined, ClearOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async"; // เพิ่มบรรทัดนี้
 import PublicNavbar from "../../components/Navbar/PublicNavbar";
 import {
   getAllSongs,
@@ -19,22 +21,23 @@ import {
   getAllAlbums,
 } from "../../services/songService";
 import "./PublicSongs.css";
+
 const { Option } = Select;
 
 const PublicSongs = () => {
   const navigate = useNavigate();
 
   // State สำหรับข้อมูลทั้งหมด
-  const [allSongs, setAllSongs] = useState([]); // เก็บข้อมูลเพลงทั้งหมด
+  const [allSongs, setAllSongs] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [albums, setAlbums] = useState([]); // เพิ่ม state สำหรับอัลบั้ม
-  const [uniqueAlbums, setUniqueAlbums] = useState([]); // เพิ่ม state สำหรับอัลบั้มที่ไม่ซ้ำ
+  const [albums, setAlbums] = useState([]);
+  const [uniqueAlbums, setUniqueAlbums] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // State สำหรับการค้นหาและกรอง
   const [searchText, setSearchText] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [selectedAlbum, setSelectedAlbum] = useState(null); // เพิ่ม state สำหรับอัลบั้มที่เลือก
+  const [selectedAlbum, setSelectedAlbum] = useState(null);
 
   // State สำหรับการแสดงผลและ pagination
   const [filteredSongs, setFilteredSongs] = useState([]);
@@ -49,7 +52,6 @@ const PublicSongs = () => {
     fetchAllData();
   }, []);
 
-  // ฟังก์ชันกรองและอัพเดตผลลัพธ์
   useEffect(() => {
     filterAndUpdateResults();
   }, [
@@ -60,7 +62,6 @@ const PublicSongs = () => {
     pagination.current,
   ]);
 
-  // ฟังก์ชันเรียงลำดับภาษาไทย
   const sortThaiStrings = (arr) => {
     return arr.sort((a, b) => {
       return a.title.localeCompare(b.title, "th", {
@@ -70,25 +71,22 @@ const PublicSongs = () => {
     });
   };
 
-  // ฟังก์ชันสร้างรายการอัลบั้มที่ไม่ซ้ำ
   const getUniqueAlbums = (albumsData) => {
     const albumMap = new Map();
-    
+
     albumsData.forEach((album) => {
-      const key = album.albumName.toLowerCase(); // ใช้ชื่ออัลบั้มเป็น key (ตัวพิมพ์เล็ก)
-      
+      const key = album.albumName.toLowerCase();
+
       if (!albumMap.has(key)) {
         albumMap.set(key, {
           id: album.id,
           albumName: album.albumName,
           artist: album.artist,
-          // เก็บข้อมูลเพิ่มเติมตามต้องการ
         });
       }
     });
-    
-    // แปลง Map กลับเป็น Array และเรียงลำดับตามชื่ออัลบั้ม
-    return Array.from(albumMap.values()).sort((a, b) => 
+
+    return Array.from(albumMap.values()).sort((a, b) =>
       a.albumName.localeCompare(b.albumName, "th", {
         numeric: true,
         sensitivity: "base",
@@ -96,15 +94,12 @@ const PublicSongs = () => {
     );
   };
 
-  // โหลดข้อมูลทั้งหมดครั้งเดียว
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      // โหลดเพลงทั้งหมด (เพิ่ม limit ให้สูงเพื่อดึงทั้งหมด)
-      const songsResponse = await getAllSongs(1, 1000); // ดึงสูงสุด 1000 เพลง
+      const songsResponse = await getAllSongs(1, 1000);
 
       if (songsResponse.success) {
-        // เรียงลำดับเพลงตามภาษาไทย ก-ฮ
         const sortedSongs = sortThaiStrings(songsResponse.data || []);
         setAllSongs(sortedSongs);
       } else {
@@ -112,19 +107,16 @@ const PublicSongs = () => {
         setAllSongs([]);
       }
 
-      // โหลดหมวดหมู่
       const categoriesResponse = await getAllCategories();
       if (categoriesResponse.success) {
         setCategories(categoriesResponse.data || []);
       }
 
-      // โหลดอัลบั้มทั้งหมด
-      const albumsResponse = await getAllAlbums(1, 1000); // ดึงอัลบั้มทั้งหมด
+      const albumsResponse = await getAllAlbums(1, 1000);
       if (albumsResponse.success) {
         const albumsData = albumsResponse.data || [];
         setAlbums(albumsData);
-        
-        // สร้างรายการอัลบั้มที่ไม่ซ้ำ
+
         const uniqueAlbumsData = getUniqueAlbums(albumsData);
         setUniqueAlbums(uniqueAlbumsData);
       } else {
@@ -142,9 +134,7 @@ const PublicSongs = () => {
     }
   };
 
-  // ฟังก์ชันสร้างความสัมพันธ์ระหว่างเพลงและอัลบั้ม
   const getSongsWithAlbums = () => {
-    // สร้าง Map สำหรับค้นหาอัลบั้มตาม songId อย่างรวดเร็ว
     const albumsBySongId = {};
     albums.forEach((album) => {
       if (!albumsBySongId[album.songId]) {
@@ -153,26 +143,22 @@ const PublicSongs = () => {
       albumsBySongId[album.songId].push(album);
     });
 
-    // เพิ่มข้อมูลอัลบั้มเข้าไปในแต่ละเพลง
     return allSongs.map((song) => ({
       ...song,
       albums: albumsBySongId[song.id] || [],
     }));
   };
 
-  // ฟังก์ชันกรองข้อมูล
   const filterAndUpdateResults = () => {
     const songsWithAlbums = getSongsWithAlbums();
     let filtered = [...songsWithAlbums];
 
-    // กรองตามการค้นหา (ชื่อเพลง, ศิลปิน)
     if (searchText.trim()) {
       const searchLower = searchText.toLowerCase().trim();
       filtered = filtered.filter(
         (song) =>
           song.title.toLowerCase().includes(searchLower) ||
           song.artist.toLowerCase().includes(searchLower) ||
-          // ค้นหาในชื่ออัลบั้มด้วย
           song.albums.some(
             (album) =>
               album.albumName.toLowerCase().includes(searchLower) ||
@@ -181,16 +167,16 @@ const PublicSongs = () => {
       );
     }
 
-    // กรองตามหมวดหมู่
     if (selectedCategory) {
       filtered = filtered.filter(
         (song) => song.categoryId === selectedCategory
       );
     }
 
-    // กรองตามอัลบั้ม (ใช้ชื่ออัลบั้มแทน ID)
     if (selectedAlbum) {
-      const selectedAlbumName = uniqueAlbums.find(album => album.id === selectedAlbum)?.albumName;
+      const selectedAlbumName = uniqueAlbums.find(
+        (album) => album.id === selectedAlbum
+      )?.albumName;
       if (selectedAlbumName) {
         filtered = filtered.filter((song) =>
           song.albums.some((album) => album.albumName === selectedAlbumName)
@@ -198,19 +184,14 @@ const PublicSongs = () => {
       }
     }
 
-    // เรียงลำดับผลลัพธ์ที่กรองแล้วตามภาษาไทย ก-ฮ
     filtered = sortThaiStrings(filtered);
-
-    // อัพเดต filtered songs
     setFilteredSongs(filtered);
 
-    // คำนวณ pagination
     const total = filtered.length;
     const startIndex = (pagination.current - 1) * pagination.pageSize;
     const endIndex = startIndex + pagination.pageSize;
     const currentPageSongs = filtered.slice(startIndex, endIndex);
 
-    // อัพเดต display songs และ pagination
     setDisplaySongs(currentPageSongs);
     setPagination((prev) => ({
       ...prev,
@@ -218,48 +199,40 @@ const PublicSongs = () => {
     }));
   };
 
-  // ฟังก์ชันการค้นหา
   const handleSearch = (value) => {
     setSearchText(value);
-    // รีเซ็ต pagination กลับไปหน้าแรก
     setPagination((prev) => ({
       ...prev,
       current: 1,
     }));
   };
 
-  // ฟังก์ชันกรองหมวดหมู่
   const handleCategoryFilter = (categoryId) => {
     setSelectedCategory(categoryId);
-    // รีเซ็ต pagination กลับไปหน้าแรก
     setPagination((prev) => ({
       ...prev,
       current: 1,
     }));
   };
 
-  // ฟังก์ชันกรองอัลบั้ม
   const handleAlbumFilter = (albumId) => {
     setSelectedAlbum(albumId);
-    // รีเซ็ต pagination กลับไปหน้าแรก
     setPagination((prev) => ({
       ...prev,
       current: 1,
     }));
   };
 
-  // ฟังก์ชันล้างการค้นหา
   const handleClearSearch = () => {
     setSearchText("");
     setSelectedCategory(null);
-    setSelectedAlbum(null); // เพิ่มการล้างอัลบั้มที่เลือก
+    setSelectedAlbum(null);
     setPagination((prev) => ({
       ...prev,
       current: 1,
     }));
   };
 
-  // ฟังก์ชันเปลี่ยนหน้า
   const handlePaginationChange = (page, pageSize) => {
     setPagination((prev) => ({
       ...prev,
@@ -268,12 +241,10 @@ const PublicSongs = () => {
     }));
   };
 
-  // ฟังก์ชันคลิกเพลง
   const handleSongClick = (song) => {
     navigate(`/song/${song.id}`);
   };
 
-  // สถิติการค้นหา
   const getSearchStats = () => {
     if (searchText || selectedCategory || selectedAlbum) {
       return {
@@ -289,29 +260,124 @@ const PublicSongs = () => {
     };
   };
 
-  // ฟังก์ชันหาชื่อหมวดหมู่จาก ID
   const getCategoryName = (categoryId) => {
     const category = categories.find((c) => c.id === categoryId);
     return category ? category.name : "";
   };
 
-  // ฟังก์ชันหาชื่ออัลบั้มจาก ID (ใช้กับ uniqueAlbums)
   const getAlbumName = (albumId) => {
     const album = uniqueAlbums.find((a) => a.id === albumId);
     return album ? album.albumName : "";
+  };
+
+  // สร้าง dynamic meta description
+  const getPageDescription = () => {
+    const totalSongs = allSongs.length;
+    const totalCategories = categories.length;
+    const totalAlbums = uniqueAlbums.length;
+
+    if (searchText || selectedCategory || selectedAlbum) {
+      let desc = `ค้นหาเพลง`;
+      if (searchText) desc += ` "${searchText}"`;
+      if (selectedCategory)
+        desc += ` ในหมวดหมู่ ${getCategoryName(selectedCategory)}`;
+      if (selectedAlbum) desc += ` ในอัลบั้ม ${getAlbumName(selectedAlbum)}`;
+      desc += ` พบ ${filteredSongs.length} เพลง`;
+      return desc;
+    }
+
+    return `ค้นหาและดูคอร์ดเพลงฟรี มีเพลงทั้งหมด ${totalSongs} เพลง ${totalCategories} หมวดหมู่ ${totalAlbums} อัลบั้ม พร้อมเครื่องมือเปลี่ยนคีย์และแสดงคอร์ด`;
+  };
+
+  // สร้าง keywords จากข้อมูลที่มี
+  const getPageKeywords = () => {
+    const categoryNames = categories.map((c) => c.name).join(", ");
+    const popularArtists = [
+      ...new Set(allSongs.slice(0, 20).map((s) => s.artist)),
+    ]
+      .slice(0, 10)
+      .join(", ");
+
+    return `คอร์ดเพลง, chord, guitar, กีตาร์, เพลง, ดนตรี, ${categoryNames}, ${popularArtists}`;
   };
 
   const searchStats = getSearchStats();
 
   return (
     <div className="public-songs-page">
+      <Helmet>
+        <title>
+          {searchText || selectedCategory || selectedAlbum
+            ? `ค้นหาเพลง${searchText ? ` "${searchText}"` : ""}${
+                selectedCategory
+                  ? ` หมวดหมู่ ${getCategoryName(selectedCategory)}`
+                  : ""
+              }${
+                selectedAlbum ? ` อัลบั้ม ${getAlbumName(selectedAlbum)}` : ""
+              } | Yum Chord`
+            : `Yum Chord - ค้นหาและดูคอร์ดเพลงฟรี`}
+        </title>
+        <meta name="description" content={getPageDescription()} />
+
+        {/* Open Graph Tags */}
+        <meta property="og:type" content="website" />
+        <meta
+          property="og:title"
+          content={
+            searchText || selectedCategory || selectedAlbum
+              ? `ค้นหาเพลง${searchText ? ` "${searchText}"` : ""}${
+                  selectedCategory
+                    ? ` หมวดหมู่ ${getCategoryName(selectedCategory)}`
+                    : ""
+                }${
+                  selectedAlbum ? ` อัลบั้ม ${getAlbumName(selectedAlbum)}` : ""
+                } | Yum Chord`
+              : `Yum Chord - ค้นหาและดูคอร์ดเพลงฟรี`
+          }
+        />
+        <meta property="og:description" content={getPageDescription()} />
+        <meta property="og:url" content={window.location.href} />
+        <meta
+          property="og:image"
+          content={`${window.location.origin}/logo192.png`}
+        />
+        <meta property="og:site_name" content="Yum Chord" />
+
+        {/* Twitter Card Tags */}
+        <meta name="twitter:card" content="summary" />
+        <meta
+          name="twitter:title"
+          content={
+            searchText || selectedCategory || selectedAlbum
+              ? `ค้นหาเพลง${searchText ? ` "${searchText}"` : ""}${
+                  selectedCategory
+                    ? ` หมวดหมู่ ${getCategoryName(selectedCategory)}`
+                    : ""
+                }${
+                  selectedAlbum ? ` อัลบั้ม ${getAlbumName(selectedAlbum)}` : ""
+                } | Yum Chord`
+              : `Yum Chord - ค้นหาและดูคอร์ดเพลงฟรี`
+          }
+        />
+        <meta name="twitter:description" content={getPageDescription()} />
+        <meta
+          name="twitter:image"
+          content={`${window.location.origin}/logo192.png`}
+        />
+
+        {/* Keywords */}
+        <meta name="keywords" content={getPageKeywords()} />
+
+        {/* Canonical URL */}
+        <link rel="canonical" href={window.location.href} />
+      </Helmet>
+
       <PublicNavbar />
 
       <div className="songs-container">
         <div className="search-section">
           <div className="search-header">
             <h1 className="page-title">ค้นหาเพลง</h1>
-            {/* <p className="page-subtitle">เลือกเพลงและดูคอร์ดกีตาร์แบบง่ายๆ</p> */}
           </div>
 
           <div className="search-controls">

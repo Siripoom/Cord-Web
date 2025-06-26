@@ -1,3 +1,4 @@
+// 1. อัพเดต PublicSongDetail.jsx - เพิ่ม dynamic title และ meta tags
 import React, { useState, useEffect } from "react";
 import { Card, Button, Tag, Spin, Alert, Divider } from "antd";
 import {
@@ -7,6 +8,7 @@ import {
   CalendarOutlined,
 } from "@ant-design/icons";
 import { useParams, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async"; // ต้องติดตั้ง react-helmet-async
 import PublicNavbar from "../../components/Navbar/PublicNavbar";
 import ChordDisplay from "../../components/ChordDisplay";
 import ImageGallery from "../../components/ImageGallery/ImageGallery";
@@ -20,14 +22,24 @@ const PublicSongDetail = () => {
   const [song, setSong] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // View control states
   const [showChords, setShowChords] = useState(true);
   const [textAlign, setTextAlign] = useState("left");
 
   useEffect(() => {
     fetchSongDetail();
   }, [id]);
+
+  // อัพเดต document title เมื่อโหลดเพลงเสร็จ
+  useEffect(() => {
+    if (song) {
+      document.title = `${song.title} - ${song.artist} | Yum Chord`;
+    }
+
+    return () => {
+      // รีเซ็ต title เมื่อออกจากหน้า
+      document.title = "Yum Chord";
+    };
+  }, [song]);
 
   const fetchSongDetail = async () => {
     try {
@@ -57,16 +69,42 @@ const PublicSongDetail = () => {
     navigate("/songs");
   };
 
-  // ฟังก์ชันจัดการปุ่มซ่อนเนื้อ + จัดกลาง
   const handleLyricsOnlyMode = () => {
     setShowChords(false);
     setTextAlign("center");
   };
 
-  // ฟังก์ชันจัดการปุ่มแสดงคอร์ด + เนื้อ
   const handleShowChordsMode = () => {
     setShowChords(true);
     setTextAlign("left");
+  };
+
+  // สร้าง URL สำหรับ Open Graph
+  const getSongUrl = () => {
+    return `${window.location.origin}/song/${id}`;
+  };
+
+  // สร้าง description สำหรับ meta tags
+  const getSongDescription = () => {
+    if (!song) return "ดูคอร์ดเพลงฟรี";
+
+    const categoryText = song.category
+      ? ` หมวดหมู่: ${song.category.name}`
+      : "";
+    const keyText = ` คีย์: ${song.defaultKey}`;
+
+    return `เพลง "${song.title}" ศิลปิน: ${song.artist}${categoryText}${keyText} - ดูคอร์ดเพลงฟรี พร้อมเครื่องมือเปลี่ยนคีย์`;
+  };
+
+  // สร้าง image URL สำหรับ Open Graph (ถ้ามี)
+  const getSongImageUrl = () => {
+    // ถ้ามีรูปปกเพลงหรือรูปแรกใน gallery
+    if (song && song.images && song.images.length > 0) {
+      return song.images[0].url;
+    }
+
+    // ใช้รูป default logo
+    return `${window.location.origin}/logo192.png`;
   };
 
   if (loading) {
@@ -86,6 +124,10 @@ const PublicSongDetail = () => {
   if (error || !song) {
     return (
       <div className="public-song-detail-page">
+        <Helmet>
+          <title>ไม่พบเพลง | Yum Chord</title>
+          <meta name="description" content="ไม่พบเพลงที่ต้องการ" />
+        </Helmet>
         <PublicNavbar />
         <div className="song-detail-container">
           <div className="error-container">
@@ -108,6 +150,41 @@ const PublicSongDetail = () => {
 
   return (
     <div className="public-song-detail-page">
+      {/* React Helmet สำหรับ Meta Tags */}
+      <Helmet>
+        <title>
+          {song.title} - {song.artist} | Yum Chord
+        </title>
+        <meta name="description" content={getSongDescription()} />
+
+        {/* Open Graph Tags */}
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={`${song.title} - ${song.artist}`} />
+        <meta property="og:description" content={getSongDescription()} />
+        <meta property="og:url" content={getSongUrl()} />
+        <meta property="og:image" content={getSongImageUrl()} />
+        <meta property="og:site_name" content="Yum Chord" />
+
+        {/* Twitter Card Tags */}
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={`${song.title} - ${song.artist}`} />
+        <meta name="twitter:description" content={getSongDescription()} />
+        <meta name="twitter:image" content={getSongImageUrl()} />
+
+        {/* เพิ่ม Keywords */}
+        <meta
+          name="keywords"
+          content={`${song.title}, ${
+            song.artist
+          }, คอร์ดเพลง, chord, guitar, กีตาร์${
+            song.category ? `, ${song.category.name}` : ""
+          }`}
+        />
+
+        {/* Canonical URL */}
+        <link rel="canonical" href={getSongUrl()} />
+      </Helmet>
+
       <PublicNavbar />
 
       <div className="song-detail-container">
@@ -132,7 +209,7 @@ const PublicSongDetail = () => {
             {/* Compact Song Header */}
             <div className="song-header-content-compact">
               <div className="song-main-info-compact">
-                <h2 className="song-title-compact">{song.title}</h2>
+                <h1 className="song-title-compact">{song.title}</h1>
                 <div className="song-meta-compact">
                   <div className="meta-item-compact">
                     <UserOutlined className="meta-icon-compact" />
@@ -157,7 +234,7 @@ const PublicSongDetail = () => {
                 </div>
               </div>
 
-              {/* View Controls - ย้ายมาจาก ChordDisplay */}
+              {/* View Controls */}
               <div className="view-controls">
                 <div className="view-section">
                   <span className="view-label">แสดงคอร์ด :</span>
@@ -211,7 +288,7 @@ const PublicSongDetail = () => {
           </div>
         </Card>
 
-        {/* Image Gallery Section - สำหรับผู้ใช้ทั่วไป */}
+        {/* Image Gallery Section */}
         <ImageGallery
           songId={song.id}
           showUpload={false}
