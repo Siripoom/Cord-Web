@@ -607,7 +607,7 @@
   }
 
   .chord-text {
-    font-size: clamp(0.8em, 2.5vw, 0.95em); /* เพิ่มขนาดคอร์ด */
+    font-size: clamp(0.75em, 2.5vw, 0.95em); /* เพิ่มขนาดคอร์ด */
   }
 
   .inline-chord {
@@ -617,7 +617,7 @@
   }
 
   .chord-word.above .chord-text {
-    font-size: clamp(0.8em, 2.5vw, 0.95em);
+    font-size: clamp(0.75em, 2.5vw, 0.95em);
   }
 
   .chord-display.auto-scrolling::before {
@@ -738,7 +738,7 @@
   }
 
   .chord-text {
-    font-size: clamp(0.85em, 1.4vw, 1.1em); /* เพิ่มขนาดคอร์ด */
+    font-size: clamp(0.75em, 1.4vw, 1.1em); /* เพิ่มขนาดคอร์ด */
   }
 
   .inline-chord {
@@ -746,7 +746,7 @@
   }
 
   .chord-word.above .chord-text {
-    font-size: clamp(0.85em, 1.4vw, 1.1em);
+    font-size: clamp(0.75em, 1.4vw, 1.1em);
   }
 }
 
