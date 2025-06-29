@@ -417,7 +417,7 @@
 }
 
 .chord-display.text-compact .chord-text {
-  font-size: 0.75em; /* เพิ่มจาก 0.85em */
+  font-size: 0.6em; /* เพิ่มจาก 0.85em */
   top: -1.2em;
 }
 
@@ -435,7 +435,7 @@
   left: 0;
   font-weight: 700;
   font-size: clamp(
-    0.8em,
+    0.6em,
     2.2vw,
     1em
   ); /* เพิ่มขนาดคอร์ดจาก 0.7em-0.9em เป็น 0.8em-1em */
@@ -488,7 +488,7 @@
 
 .inline-chord {
   font-weight: 700;
-  font-size: 0.9em; /* เพิ่มจาก 0.85em */
+  font-size: 0.7em;
   background-color: rgb(255, 255, 255);
   padding: 2px 6px;
   border-radius: 4px;
@@ -510,7 +510,7 @@
   top: -1.2em;
   left: 0;
   font-weight: 700;
-  font-size: clamp(0.8em, 2.2vw, 1em); /* เพิ่มขนาดเหมือนกับ .chord-text */
+  font-size: clamp(0.6em, 2.2vw, 0.8em); /* เพิ่มขนาดเหมือนกับ .chord-text */
   color: #1890ff;
   user-select: none;
   white-space: nowrap;
@@ -607,7 +607,7 @@
   }
 
   .chord-text {
-    font-size: clamp(0.75em, 2.5vw, 0.95em); /* เพิ่มขนาดคอร์ด */
+    font-size: clamp(0.6em, 2.5vw, 0.95em); /* เพิ่มขนาดคอร์ด */
   }
 
   .inline-chord {
@@ -617,7 +617,7 @@
   }
 
   .chord-word.above .chord-text {
-    font-size: clamp(0.75em, 2.5vw, 0.95em);
+    font-size: clamp(0.6em, 2.5vw, 0.95em);
   }
 
   .chord-display.auto-scrolling::before {
@@ -704,7 +704,7 @@
   }
 
   .chord-text {
-    font-size: clamp(0.75em, 3vw, 0.9em); /* เพิ่มขนาดคอร์ด */
+    font-size: clamp(0.6em, 3vw, 0.8em); /* เพิ่มขนาดคอร์ด */
     top: -1.3em; /* ปรับตำแหน่งให้เหมาะสม */
   }
 
@@ -715,7 +715,7 @@
   }
 
   .chord-word.above .chord-text {
-    font-size: clamp(0.75em, 3vw, 0.9em);
+    font-size: clamp(0.6em, 3vw, 0.8em); /* เพิ่มขนาดคอร์ด */
     top: -1.4em;
   }
 
@@ -730,7 +730,7 @@
 /* สำหรับหน้าจอขนาดใหญ่มาก */
 @media (min-width: 1200px) {
   .chord-display {
-    font-size: clamp(20px, 2vw, 26px); /* เพิ่มขนาด */
+    font-size: clamp(14px, 2vw, 22px); /* เพิ่มขนาด */
   }
 
   .chord-display.text-compact {
@@ -738,7 +738,7 @@
   }
 
   .chord-text {
-    font-size: clamp(0.75em, 1.4vw, 1.1em); /* เพิ่มขนาดคอร์ด */
+    font-size: clamp(0.6em, 3vw, 0.8em); /* เพิ่มขนาดคอร์ด */
   }
 
   .inline-chord {
@@ -746,7 +746,7 @@
   }
 
   .chord-word.above .chord-text {
-    font-size: clamp(0.75em, 1.4vw, 1.1em);
+    font-size: clamp(0.6em, 3vw, 0.8em); /* เพิ่มขนาดคอร์ด */
   }
 }
 
@@ -764,7 +764,7 @@
   }
 
   .chord-text {
-    font-size: clamp(0.7em, 3.5vw, 0.8em);
+    font-size: clamp(0.6em, 2.2vw, 0.8em);
     padding: 1px 4px;
     top: -1.2em;
   }
@@ -776,7 +776,7 @@
   }
 
   .chord-word.above .chord-text {
-    font-size: clamp(0.7em, 3.5vw, 0.8em);
+    font-size: clamp(0.6em, 2.2vw, 0.8em);
     top: -1.4em;
   }
 
@@ -824,7 +824,7 @@
 
   .chord-text {
     color: #000 !important;
-    font-size: clamp(0.7em, 1.2vw, 0.8em) !important;
+    font-size: clamp(0.6em, 2.2vw, 0.8em) !important;
     background: transparent !important;
     border: none !important;
   }
@@ -844,7 +844,7 @@
     color: #000 !important;
     background: transparent !important;
     border: none !important;
-    font-size: clamp(0.7em, 1.2vw, 0.8em) !important;
+    font-size: clamp(0.6em, 2.2vw, 0.8em) !important;
   }
 }
 
