@@ -769,15 +769,20 @@ const SongManagement = ({ sidebarVisible, toggleSidebar }) => {
                     {[
                       "C",
                       "C#",
+                      "Db",
                       "D",
                       "D#",
+                      "Eb",
                       "E",
                       "F",
                       "F#",
+                      "Gb",
                       "G",
                       "G#",
+                      "Ab",
                       "A",
                       "A#",
+                      "Bb",
                       "B",
                     ].map((key) => (
                       <Option key={key} value={key}>
